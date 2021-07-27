@@ -27,7 +27,6 @@ bool MDBManager::TestListChk(){
         LOG(ERROR) << "InitTestList failed: " << e.what();
         return ret = false;
     }
-    return ret;
 }
 
 
@@ -41,8 +40,10 @@ bool MDBManager::ResultListChk(){
                                                       );
         stmnt->setString(1, this->_ResultTable);
         stmnt->executeQuery();
+        return true;
     } catch (sql::SQLException &e) {
         LOG(ERROR) << "InitResultList Error: " << e.what();
+        return false;
     }
 }
 
@@ -61,9 +62,11 @@ bool MDBManager::SetTestList(std::vector<IDINT> config){
             stmnt->setUInt(1, ++index);
             stmnt->executeQuery();
         }
+        return true;
     }
     catch(sql::SQLException &e){
         LOG(ERROR) << "SetTestList error" << e.what() ;
+        return false;
     }
 }
 
@@ -158,7 +161,6 @@ bool MDBManager::SetStatus(IDINT id, std::string MAC, u_int8_t status){
         LOG(ERROR) << "failed in setting status of test: " << id << "of machine: " << MAC << e.what();
         return ret=false;
     }
-    return ret;
 }
 
 
@@ -182,7 +184,6 @@ bool MDBManager::SetItemResult(IDINT id, std::string MAC, bool result){
     LOG(ERROR) << "SetItemResult failed in test id: " << id << "from: " << MAC << e.what();
     return ret=false;
     }
-    return ret;
 }
 
 
@@ -241,7 +242,7 @@ MDBManager::MDBManager()
         sql::Properties properties({{"user", "admin"}, {"password", "password"}});
         this->_Conn = std::unique_ptr<sql::Connection>(driver->connect(url, properties));
 
-    } catch(const sql::SQLException e) {
+    } catch(sql::SQLException e) {
         LOG(ERROR) << "connect to mariadb server failed!" << e.what();
     }
 }
@@ -322,12 +323,12 @@ u_int8_t MDBManager::GetStatus(IDINT id, std::string MAC)
 
 
 
-void MDBManager::errSetpass(IDINT id, std::string MAC){
+//void MDBManager::errSetpass(IDINT id, std::string MAC){
 
-}
+//}
 
 
 
-void MDBManager::errSeterr(IDINT id, std::string MAC){
+//void MDBManager::errSeterr(IDINT id, std::string MAC){
 
-}
+//}

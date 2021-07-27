@@ -6,13 +6,14 @@
 #include "easylog/easylogging++.h"
 #include "testcontrol.h"
 
+
 #include <vector>
 #include <mutex>
 #include <iostream>
 #include <cstring>
 #include <mariadb/conncpp.hpp>
 
-#define IDINT u_int16_t
+
 
 class MDBManager
 {

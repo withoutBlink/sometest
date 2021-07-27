@@ -7,7 +7,8 @@ TestControl *TestControl::_This = nullptr;
 
 TestItem::TestItem(IDINT id)
     :_test_id(id){
-    MDBManager::Instance();
+    nlohmann::json iteminfo = MDBManager::Instance()->GetTestItem(this->_test_id);
+
 }
 
 TestItem::~TestItem(){}

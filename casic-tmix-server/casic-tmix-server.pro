@@ -7,9 +7,9 @@ CONFIG -= qt
 PROJECTPATH = $$PWD/..
 
 DEFINES += \
-        OPENSSL_NO_KRB5 \
-        ASIO_STANDALONE \           # 使用本地asio库
-        USE_STANDALONE_ASIO \       # 使用本地asio库
+#        OPENSSL_NO_KRB5 \
+        ASIO_STANDALONE \           # local asio lib
+        USE_STANDALONE_ASIO \       # local asio lib
 
 #contains(DEFINES, KOS) {
 #    contains(DEFINES, SERVER) {
@@ -25,25 +25,27 @@ LIBS += \
         -ldl
 }
 
-macx {
-INCLUDEPATH += \
-        /usr/local/opt/openssl@1.1/include
+#macx {
+#INCLUDEPATH += \
+#        /usr/local/opt/openssl@1.1/include
 
-LIBS += \
-        -L/usr/local/opt/openssl@1.1/lib
-}
-win32 {
+#LIBS += \
+#        -L /usr/local/opt/openssl@1.1/lib
+#}
 
-}
+#win32 {
+
+#}
 
 LIBS += \
         -lcrypto \
         -lsensors \
+        -lmariadbcpp
 
 
 INCLUDEPATH += \
         $$PROJECTPATH/common \
-        $$PROJECTPATH/common/asio \
+        $$PROJECTPATH/common/asio
 
 HEADERS += \
         $$PROJECTPATH/common/easylog/easylogging++.h \
@@ -51,9 +53,9 @@ HEADERS += \
         $$PROJECTPATH/common/utils/base64.hpp \
         $$PWD/src/wssrvroute.h \
         $$PWD/src/config.h \
-    src/mdbmanager.h \
-        src/rwlock.h \
-    src/testcontrol.h
+        $$PWD/src/mdbmanager.h \
+        $$PWD/src/rwlock.h \
+        $$PWD/src/testcontrol.h \ \
 
 
 SOURCES += \
@@ -61,6 +63,6 @@ SOURCES += \
         $$PWD/src/wssrvroute.cpp \
 	$$PWD/main.cpp \
         $$PWD/src/config.cpp \
-    src/mdbmanager.cpp \
-        src/rwlock.cpp \
-    src/testcontrol.cpp
+        $$PWD/src/mdbmanager.cpp \
+        $$PWD/src/rwlock.cpp \
+        $$PWD/src/testcontrol.cpp

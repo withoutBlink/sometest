@@ -1,6 +1,5 @@
 // global
 #include "wssrvroute.h"
-
 WSSrvRoute *WSSrvRoute::_This = nullptr;
 // global end
 

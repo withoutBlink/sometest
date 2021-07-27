@@ -34,6 +34,6 @@
 #define SOFTWARE_CMD_FINDCOMMAND	"Find Srv Command."
 
 #define SYSTEM_CONF_INFO                "/etc/.systeminfo"
-
+#define IDINT                           u_int16_t
 
 #endif // SOFTWAREABOUT_H

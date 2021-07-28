@@ -4,3 +4,5 @@ casic-tmix-client*
 build/*
 *.tar.gz
 *.sqlite3
+*.txt
+*.tar.gz

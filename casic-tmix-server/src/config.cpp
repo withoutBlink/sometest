@@ -68,7 +68,7 @@ void Config::parse()
 		inifile.GetIntValue("Server", "PortServerHttp", &this->Data.PortServerHTTP);
 	}
 	if (inifile.HasKey("Server", "ProtServerWs")) {
-		inifile.GetIntValue("Server", "ProtServerWs", &this->Data.PortServerWS);
+        inifile.GetIntValue("Server", "PortServerWs", &this->Data.PortServerWS);
 	}
 }
 

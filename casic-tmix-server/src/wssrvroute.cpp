@@ -32,17 +32,8 @@ void WSSrvRoute::BroadCast(const std::string& msg){
         this->SendMsg(map.second, message);
     }
 }
-
-//void WSSrvRoute::InitUi()
-//{
-
-//}
-
-//void WSSrvRoute::InitItem()
-//{
-
-//}
 // public end
+
 
 // private function
 WSSrvRoute::WSSrvRoute(){

@@ -88,7 +88,8 @@ nlohmann::json MDBManager::GetAllTest()
                 {"test_standard", output->getString(6)},
                 {"test_start_prog", output->getString(7)},
                 {"test_stop_prog", output->getString(8)},
-                {"test_select", output->getInt(9)}
+                {"test_select", output->getInt(9)},
+                {"test_index", output->getInt(10)}
             };
 			ret.push_back(temp);
 		}
@@ -213,7 +214,7 @@ bool MDBManager::GetItemResult(IDINT id, std::string MAC){
 bool MDBManager::InsertItem(nlohmann::json newitem){
     try {
     std::unique_ptr<sql::PreparedStatement> stmnt(this->_Conn->prepareStatement(
-                                                      "insert into table(test_id, test_type, test_name, test_key, test_info, test_standard, test_start_prog, test_stop_prog, test_select) values(?,?,?,?,?,?,?,?,?)"
+                                                      "insert into (test_id, test_type, test_name, test_key, test_info, test_standard, test_start_prog, test_stop_prog, test_select) values(?,?,?,?,?,?,?,?,?)"
                                                       )
                                                   );
     stmnt->setInt(1, newitem["test_id"].get<int>());
@@ -225,13 +226,45 @@ bool MDBManager::InsertItem(nlohmann::json newitem){
     stmnt->setString(7, newitem["test_start_prog"].get<std::string>());
     stmnt->setString(8, newitem["test_stop_prog"].get<std::string>());
     stmnt->setInt(9, newitem["test_select"].get<bool>());
+    stmnt->executeQuery();
+    return true;
     }
     catch (sql::SQLException &e) {
         LOG(ERROR) << "InsertList failed: " << e.what();
+        return false;
     }
-
 }
 
+nlohmann::json MDBManager::GetTestItem(u_int16_t id){
+    nlohmann::json testitem;
+    try {
+    std::unique_ptr<sql::PreparedStatement> stmnt(this->_Conn->prepareStatement(
+                                                      "select * from itemlist where test_id = ?"
+                                                      )
+                                                  );
+
+    stmnt->setInt(1, id);
+    sql::ResultSet *output = stmnt->executeQuery();
+    testitem = {
+        {"test_id", output->getInt(1)},
+        {"test_type", output->getInt(2)},
+        {"test_name", output->getString(3)},
+        {"test_key", output->getString(4)},
+        {"test_info", output->getString(5)},
+        {"test_standard", output->getString(6)},
+        {"test_start_prog", output->getString(7)},
+        {"test_stop_prog", output->getString(8)},
+        {"test_select", output->getInt(9)},
+        {"test_index", output->getInt(10)}
+    };
+
+    return testitem;
+    }
+    catch (sql::SQLException &e) {
+        LOG(ERROR) << "InsertList failed: " << e.what();
+        return testitem;
+    }
+}
 
 
 MDBManager::MDBManager()

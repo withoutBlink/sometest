@@ -24,7 +24,6 @@ public:
     bool InitDB();// Init database include itemlist table and result_%startdatetime table
     bool TestListChk();// Init itemlist table
     bool ResultListChk();// create new result table in database include selected test and sort by index
-
     bool SetTestList(std::vector<IDINT> config);// config is test id array
 
     // testlist
@@ -32,6 +31,7 @@ public:
     nlohmann::json GetTestList();// send this to client for task init, keep the same to all machines being tested
     bool InsertItem(nlohmann::json newitem);// add item to testlist
     nlohmann::json GetTestItem(IDINT id);// get testitem info
+    std::vector<IDINT> GetIDList();// sort itemlist table by test_index, return sorted ids
 
     // results
     IDINT GetCurItemId(std::string MAC);// which test item status is 2
@@ -46,7 +46,7 @@ private:
     ~MDBManager();
 
 
-    std::vector<IDINT> GetIDList();// sort itemlist table by test_index, return sorted ids
+
     std::string GetItemCMD(IDINT id);
     // std::string GetItemStop(IDINT id);
     u_int8_t GetStatus(IDINT id, std::string MAC);

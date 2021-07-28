@@ -8,21 +8,26 @@ TestControl *TestControl::_This = nullptr;
 TestItem::TestItem(IDINT id)
     :_test_id(id){
     nlohmann::json iteminfo = MDBManager::Instance()->GetTestItem(this->_test_id);
-
+    this->_test_type = iteminfo["test_type"];
+    this->_test_name = iteminfo["test_name"];
+    this->_test_key = iteminfo["test_key"];
+    this->_test_info = iteminfo["test_info"];
+    this->_test_standard = iteminfo["test_standard"];
+    this->_test_start_prog = iteminfo["test_start_prog"];
+    this->_test_stop_prog = iteminfo["test_stop_porg"];
+    this->_test_select = iteminfo["test_select"];
 }
 
 TestItem::~TestItem(){}
 
-size_t TestItem::GetStatus()
-{
+size_t TestItem::GetStatus(){
     this->_Lock.LockR();
     size_t status = this->_Status;
     this->_Lock.UNLock();
     return status;
 }
 
-void TestItem::SetStarted()
-{
+void TestItem::SetStarted(){
     this->_Lock.LockW();
     this->_Status = 1;
     this->_Lock.UNLock();
@@ -42,8 +47,7 @@ std::string TestItem::GetTestKey(){
     return key;
 }
 
-bool TestItem::SetResult(bool result)
-{
+bool TestItem::SetResult(bool result){
     this->_Lock.LockW();
     if (this->_Status == 3 && result == true){
         this->_Repaired = true;
@@ -53,6 +57,62 @@ bool TestItem::SetResult(bool result)
         this->_Lock.UNLock();
     }
     return this->_Result;
+}
+
+//TargetDEV:
+std::string TargetDev::GetMac(){
+    this->_Lock.LockR();
+    std::string mac = this->_MAC;
+    this->_Lock.UNLock();
+    return mac;
+}
+
+std::string TargetDev::GetIP(){
+    this->_Lock.LockR();
+    std::string ipaddr = this->_IP;
+    this->_Lock.UNLock();
+    return ipaddr;
+}
+
+std::vector<TestItem> TargetDev::GetItemlist(){
+    this->_Lock.LockR();
+    std::vector<TestItem> list = this->_ItemList;
+    this->_Lock.UNLock();
+    return list;
+}
+
+std::vector<TestItem>::iterator TargetDev::GetCuritem(){
+    this->_Lock.LockR();
+    std::vector<TestItem>::iterator curitem = this->_Curitem;
+    this->_Lock.UNLock();
+    return curitem;
+}
+
+std::vector<TestItem> TargetDev::GetErrlist(){
+    this->_Lock.LockR();
+    std::vector<TestItem> errlist = this->_ErrItemList;
+    this->_Lock.UNLock();
+    return errlist;
+}
+
+TargetDev::TargetDev(std::string mac, std::string ipaddr)
+    :_MAC(mac),_IP(ipaddr){
+    this->_ItemList = this->InitItemlist();
+    this->_Curitem = _ItemList.begin()-1;
+}
+
+TargetDev::~TargetDev(){
+
+}
+
+std::vector<TestItem> TargetDev::InitItemlist(){
+    std::vector<TestItem> retlist;
+    std::vector<IDINT> idlist = MDBManager::Instance()->GetIDList();
+    for (IDINT id : idlist){
+        TestItem testitem(id);
+        retlist.push_back(testitem);
+    }
+    return retlist;
 }
 
 
@@ -83,78 +143,29 @@ bool TestControl::Start(std::string ipaddr, nlohmann::json content)
        { "Method", "Start" },
        { "Content", MDBManager::Instance()->GetTestList()}
    };
-   this->SetStarted(this->GetMAC(ipaddr));
    WSSrvRoute::Instance()->SendMsg(ipaddr, json.dump());
    return true;
+}
+
+bool TestControl::SetStarted(std::string ipaddr, nlohmann::json content){
+    if (content["test_id"].is_null()){return false;}
+    IDINT testid = content["test_id"];
+    MDBManager::Instance()->SetStatus(testid, this->_DevMap[ipaddr].GetMac(),2);
+    return true;
 }
 
 void TestControl::Stop(std::string){};
 
 nlohmann::json TestControl::ItemResults(std::string ipaddr)
 {
-    nlohmann::json curitem = TestControl::Instance()->CurItem(ipaddr);
-    int rescode = msg["Result"]["Status"].get<bool>() ? 1 : 2;// test pass or not pass
-    curitem["Result"] = rescode;
-    TestControl::Instance()->SetCurResult(rescode);
-	nlohmann::json json = {
-		{ "Method", "ItemResult" },
-		{ "Content", curitem }
-	};
-    return json;
 
-//	json.clear();
-//	json = {
-//		{ "Method", "ItemClose" },
-//		{ "Content", "" }
-//	};
-//	WSSrvRoute::Instance()->SendMsgToItem(json.dump());
-
-//    this->itemStop();
-//    if (this->itemNext()) {
-//        this->itemStart();
-//    }
 }
 
 TestControl::TestControl(){}
 
 TestControl::~TestControl(){}
 
-void SetStarted(std::string mac){
 
-}
-
-
-bool TestControl::itemNext()
-{
-    return TestControl::Instance()->Item.NextItem();
-}
-
-void TestControl::itemStart()
-{
-	nlohmann::json json = {
-		{ "Method", "ItemResult" },
-        { "Content", TestControl::Instance()->Item.CurItem() }
-	};
-	json["Content"]["Result"] = 3;
-    // WSSrvRoute::Instance()->SendMsgToUI(json.dump());
-	this->_WorkThread = new std::thread([=](){
-		try {
-            LOG(DEBUG) << TestControl::Instance()->Item.CurItem();
-            std::string cmd = fmt::format("{0}/{1}", SOFTWARE_PATH_BIN, TestControl::Instance()->Item.CurItem()["Exec"].get<std::string>());
-			std::system(cmd.c_str());
-		}  catch (std::exception &e) {
-			LOG(ERROR) << e.what();
-		}
-	});
-}
-
-void TestControl::itemStop(){
-	if (this->_WorkThread) {
-		this->_WorkThread->join();
-		delete this->_WorkThread;
-		this->_WorkThread = nullptr;
-	}
-}
 
 std::string TestControl::GetSystime(){
     auto now = std::chrono::system_clock::now();
@@ -162,12 +173,11 @@ std::string TestControl::GetSystime(){
     return std::ctime(&curtime);
 };
 
-void TestControl::Task(){
-};
 
 bool TestControl::CheckReady(nlohmann::json content, std::string ipaddr){
     if (content.contains("MAC")  && !content["MAC"].is_null()){
-        bindMAC(ipaddr, content["MAC"]);
+        TargetDev dev(ipaddr, content["MAC"]);
+        this->_DevMap[ipaddr]=dev;// add ready device to device map
         return true;
     }
     else {
@@ -175,49 +185,12 @@ bool TestControl::CheckReady(nlohmann::json content, std::string ipaddr){
     }
 };
 
-void TestControl::bindMAC(std::string ipaddr, std::string macaddr){
-    this->_MACbind[macaddr] = ipaddr;
-};
-
 
 nlohmann::json TestControl::ItemList(std::string ipaddr)
 {
     this->_Lock.LockR();
-    std::string MAC = this->GetMAC(ipaddr);
-    nlohmann::json json = MDBManager::Instance()->GetTestItems(MAC);
+    std::string MAC = this->_DevMap[ipaddr].GetMac();
+    nlohmann::json tmpjson = MDBManager::Instance()->GetTestList();
     this->_Lock.UNLock();
-    return json;
-}
-
-nlohmann::json TestControl::CurItem()
-{
-    nlohmann::json json;
-    this->_Lock.LockR();
-    json = MDBManager::Instance()->GetItem(this->_CurItem);
-    this->_Lock.UNLock();
-    return json;
-}
-
-
-bool TestControl::NextItem()
-{
-    bool ret = false;
-    this->_Lock.LockR();
-
-    std::vector<size_t> idlist = MDBManager::Instance()->GetIDList();
-    auto it = find(idlist.begin(), idlist.end(), this->_CurItem);
-    if (it != idlist.end()) {
-        std::size_t index = it - idlist.begin();
-        if (index < idlist.size()) {
-            this->_CurItem = idlist.at(index + 1);
-            ret = true;
-        }
-    }
-
-    this->_Lock.UNLock();
-    return ret;
-}
-
-std::string TestControl::GetMAC(std::string ipaddr){
-    return this->_MACbind.find(ipaddr)->first;
+    return tmpjson;
 }

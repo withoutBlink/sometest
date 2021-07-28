@@ -239,7 +239,7 @@ void WSSrvRoute::onItemMesg(const std::string& msg, std::shared_ptr<WsServer::Co
     if(method == "TestReady"){ // decide the test machine is ready or not after recieve
         if(!TestControl::Instance()->Start(ipaddr, content)){ErrorRespond("Not ready", connection);}
     } else if (method == "Started"){
-        TestControl::Instance()->
+        TestControl::Instance()->SetStarted(ipaddr,content);
     } else if (method == "ItemConf"){
         TestControl::Instance()->GetItemConf();
     } else if (method == "TimeSync"){// need to repair
@@ -247,7 +247,7 @@ void WSSrvRoute::onItemMesg(const std::string& msg, std::shared_ptr<WsServer::Co
     } else if (method == "BroadCast"){
         this->BroadCast(content_str);
     } else if (method == "Cooperate"){
-        TestControl::Instance()->Task();
+
     } else{
         WSSrvRoute::Instance()->SendMsg(connection, "Illegal Message");
         LOG(WARNING) << "Unrecongnized method:"

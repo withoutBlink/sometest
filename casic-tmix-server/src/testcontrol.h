@@ -1,4 +1,4 @@
-#ifndef TESTCONTROL_H
+﻿#ifndef TESTCONTROL_H
 #define TESTCONTROL_H
 
 #include <mutex>
@@ -11,7 +11,7 @@
 #include "fmt/format.h"
 #include "easylog/easylogging++.h"
 #include "utils/softwareabout.h"
-#include "src/wssrvroute.h"
+#include "src/wssroute.h"
 #include "src/config.h"
 #include "src/mdbmanager.h"
 
@@ -35,10 +35,12 @@ public:
 
     size_t GetStatus();
     void SetStarted();
+    void SetResult(bool result);
+    nlohmann::json GetResult();
     IDINT GetTestID();
     std::string GetTestKey();
-    bool SetResult(bool result);
-    nlohmann::json GetCurResult();
+    std::string GetTestCMD();
+
 
 private:
     RWLock _Lock;
@@ -51,9 +53,9 @@ private:
     std::string _test_start_prog;
     std::string _test_stop_prog;
     bool _test_select = false;
-    bool _Result = false;
-    bool _Repaired = false;
-    size_t _Status;//ready=0, running=1, finished=2, error=3
+    bool _Result = false;// variable
+    bool _Repaired = false;// variable
+    size_t _Status;//ready=0, running=1, finished=2, error=3, vairable
 };
 
 class TargetDev
@@ -64,6 +66,8 @@ public:
     std::string GetIP();
     std::vector<TestItem> GetItemlist();
     std::vector<TestItem>::iterator GetCuritem();
+    IDINT GetCuritemID();
+
     std::vector<TestItem> GetErrlist();
 
     TargetDev(std::string mac, std::string ipaddr);
@@ -87,23 +91,23 @@ public:
 	static void Destory();
 
     std::string GetSystime(); // send system time to client for time settings
-    nlohmann::json GetItemConf();// get test list itemconf from database
-    bool Start(std::string ipaddr, nlohmann::json content); // start specific machine test process
+    bool Prepare(std::string ipaddr, nlohmann::json content); // start specific machine test process
+    nlohmann::json Start(std::string ipaddr);
     bool SetStarted(std::string ipaddr, nlohmann::json content);// set test status 1
     void Stop(std::string ipaddr);// stop specific machine test process
     float Status(std::string ipaddr);// check test complete ratio
     nlohmann::json ItemList(std::string ipaddr);
-    TestItem* CurItem(std::string ipaddr);
     nlohmann::json ItemResults(std::string ipaddr);// get specific machine test result from database
-    bool SetItemResult(const nlohmann::json& msg);
-
-    void Task(std::string cmd);
-    void Reload();
+    bool SetItemResult(std::string ipaddr, const nlohmann::json& msg);
+    bool Reload();
 
 private:
     TestControl();
     ~TestControl();
 
+    bool isFresh(std::string ipaddr);// get test list itemconf from database
+    nlohmann::json FreshStart(std::string ipaddr);// fresh start a new test
+    nlohmann::json Resume(std::string ipaddr);// start from last saved
     bool CheckReady(nlohmann::json content, std::string ipaddr);// check client machine if it is ready
     void SetItemConf(nlohmann::json conf);
     void AddDev(TargetDev dev);// bind connection remote ip address with MAC address, write to _MACbind

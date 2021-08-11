@@ -1,12 +1,5 @@
 #include "config.h"
 
-#include "inifile/inifile.h"
-#include "easylog/easylogging++.h"
-
-#include "src/mdbmanager.h"
-#include "utils/softwareabout.h"
-
-
 Config *Config::_This = nullptr;
 
 Config *Config::Instance()

@@ -29,8 +29,6 @@ bool MDBManager::TestListChk(){
     }
 }
 
-
-
 bool MDBManager::ResultListChk(){
     this->_ResultTable = "result"+TestControl::Instance()->GetSystime();
     try {
@@ -107,8 +105,8 @@ nlohmann::json MDBManager::GetTestList(){
         for(size_t index=0; this->GetIDList().size(); index++){
             IDINT id = this->GetIDList()[index];
             nlohmann::json partret = {
-                {"TestID", id},
-                {"TestCMD", this->GetItemCMD(id)}
+                {"test_id", id},
+                {"test_start_prog", this->GetItemCMD(id)}
             };
             testlist.push_back(partret);
         }
@@ -131,11 +129,13 @@ IDINT MDBManager::GetCurItemId(std::string MAC)
         stmnt->setString(1, this->_ResultTable);
         stmnt->setString(2, MAC);
         sql::ResultSet *output = stmnt->executeQuery();
+        IDINT curid = this->GetIDList().front();
         while(output->next()){
             if (output->getInt(2)==2){
-                return output->getUInt(1);
+                curid = output->getUInt(1);
             }
         }
+        return curid;
     } catch (sql::SQLException &e) {
         LOG(ERROR) << "GetCurItemID from: " << MAC <<" error:" << e.what();
 	}

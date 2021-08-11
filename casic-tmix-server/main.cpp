@@ -2,7 +2,7 @@
 
 #include "src/config.h"
 #include "utils/hardwarefreak.h"
-#include "src/wssrvroute.h"
+#include "src/wssroute.h"
 #include "webserver/server_ws.hpp"
 using WsServer = SimpleWeb::SocketServer<SimpleWeb::WS>;
 

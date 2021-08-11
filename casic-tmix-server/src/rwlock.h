@@ -2,6 +2,7 @@
 #define RWLOCK_H
 
 #include <pthread.h>
+#include "easylog/easylogging++.h"
 
 class RWLock
 {

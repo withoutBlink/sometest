@@ -4,7 +4,6 @@
 TestControl *TestControl::_This = nullptr;
 //global end
 
-
 TestItem::TestItem(IDINT id)
     :_test_id(id){
     nlohmann::json iteminfo = MDBManager::Instance()->GetTestItem(this->_test_id);
@@ -18,8 +17,6 @@ TestItem::TestItem(IDINT id)
     this->_test_select = iteminfo["test_select"];
 }
 
-TestItem::~TestItem(){}
-
 size_t TestItem::GetStatus(){
     this->_Lock.LockR();
     size_t status = this->_Status;
@@ -29,8 +26,47 @@ size_t TestItem::GetStatus(){
 
 void TestItem::SetStarted(){
     this->_Lock.LockW();
-    this->_Status = 1;
+    if ( this->_Status == 0){
+        this->_Status = 1;
+    }
+    else if (_Status == 3){
+        this->_Status = 1;
+        this->_Repaired =1;
+    }
     this->_Lock.UNLock();
+}
+
+void TestItem::SetResult(bool result){
+    this->_Lock.LockW();
+    if(this->_Status == 1){
+        if (result){
+            this->_Result = result;
+            this->_Status = 2;
+        }
+        else {
+            this->_Result = result;
+            this->_Status = 3;
+        }
+    }
+    else if (this->_Status == 3){
+        if (result){
+            this->_Result = result;
+            this->_Status = 2;
+            this->_Repaired = 1;
+        }
+    }
+    this->_Lock.UNLock();
+}
+
+nlohmann::json TestItem::GetResult(){
+    this->_Lock.LockR();
+    nlohmann::json json_tmp = {
+        {"test_id", this->_test_id},
+        {"test_result", this->_Result},
+        {"test_repaired", this->_Repaired}
+    };
+    this->_Lock.UNLock  ();
+    return json_tmp;
 }
 
 IDINT TestItem::GetTestID(){
@@ -40,23 +76,18 @@ IDINT TestItem::GetTestID(){
     return id;
 }
 
+std::string TestItem::GetTestCMD(){
+    this->_Lock.LockR();
+    std::string cmd = this->_test_start_prog;
+    this->_Lock.UNLock();
+    return cmd;
+}
+
 std::string TestItem::GetTestKey(){
     this->_Lock.LockR();
     std::string key = this->_test_key;
     this->_Lock.UNLock();
     return key;
-}
-
-bool TestItem::SetResult(bool result){
-    this->_Lock.LockW();
-    if (this->_Status == 3 && result == true){
-        this->_Repaired = true;
-        this->_Result = true;
-    }else {
-        this->_Result = result;
-        this->_Lock.UNLock();
-    }
-    return this->_Result;
 }
 
 //TargetDEV:
@@ -88,6 +119,12 @@ std::vector<TestItem>::iterator TargetDev::GetCuritem(){
     return curitem;
 }
 
+IDINT TargetDev::GetCuritemID(){
+    auto tmpmid = this->GetCuritem();
+    IDINT curid = (*tmpmid).GetTestID();
+    return curid;
+}
+
 std::vector<TestItem> TargetDev::GetErrlist(){
     this->_Lock.LockR();
     std::vector<TestItem> errlist = this->_ErrItemList;
@@ -98,11 +135,14 @@ std::vector<TestItem> TargetDev::GetErrlist(){
 TargetDev::TargetDev(std::string mac, std::string ipaddr)
     :_MAC(mac),_IP(ipaddr){
     this->_ItemList = this->InitItemlist();
-    this->_Curitem = _ItemList.begin()-1;
-}
-
-TargetDev::~TargetDev(){
-
+    std::vector<TestItem>::iterator curitem;
+    IDINT curid = MDBManager::Instance()->GetCurItemId(mac);
+    for (curitem = this->_ItemList.begin();curitem != this->_ItemList.end();curitem++){
+        if (curitem->GetTestID() == curid){
+            this->_Curitem = curitem;
+            break;
+        }
+    }
 }
 
 std::vector<TestItem> TargetDev::InitItemlist(){
@@ -133,18 +173,76 @@ void TestControl::Destory()
 	}
 }
 
-void TestControl::Reload(){}
+bool TestControl::Reload(){ return false; }
 
-bool TestControl::Start(std::string ipaddr, nlohmann::json content)
+bool TestControl::Prepare(std::string ipaddr, nlohmann::json content)
 {
-   if(!MDBManager::Instance()->InitDB()){return false;}// check if DB is ready
-   if(!TestControl::Instance()->CheckReady(content, ipaddr)){return false;}//check client is ready
-   nlohmann::json json = {
-       { "Method", "Start" },
-       { "Content", MDBManager::Instance()->GetTestList()}
-   };
-   WSSrvRoute::Instance()->SendMsg(ipaddr, json.dump());
+   if(!this->CheckReady(content, ipaddr)){return false;}//check if client is ready
+   // check if db is ready
    return true;
+}
+
+bool TestControl::isFresh(std::string ipaddr){
+    IDINT curid = this->_DevMap[ipaddr].GetCuritemID();
+    IDINT firstid = this->_DevMap[ipaddr].GetItemlist().front().GetTestID();
+    if (curid == firstid){return true;}
+    else {return false;}
+}
+
+nlohmann::json TestControl::Start(std::string ipaddr){
+    nlohmann::json json_ret;
+        if (isFresh(ipaddr)){
+        try {
+            json_ret = FreshStart(ipaddr);
+        } catch (std::exception &e) {
+            LOG(ERROR) << "Start fresh test from" << ipaddr << "failed" <<e.what();
+        }
+
+    }
+    else {
+        try {
+            json_ret = Resume(ipaddr);
+        } catch (std::exception &e) {
+            LOG(ERROR) << "Resume test from" << ipaddr << "failed" <<e.what();
+        }
+
+    }
+    return json_ret;
+}
+
+nlohmann::json TestControl::FreshStart(std::string ipaddr){
+    auto mid_tmp = this->_DevMap[ipaddr].GetItemlist();
+    nlohmann::json idlist;
+    for (TestItem testitem : mid_tmp){
+        nlohmann::json json_tmp = {
+            {"test_id", testitem.GetTestID()},
+            {"test_prog_start", testitem.GetTestCMD()}
+        };
+        idlist.push_back(json_tmp);
+    }
+    nlohmann::json json_ret = {
+        { "Method", "Start" },
+        { "Content", idlist}
+    };
+    return json_ret;
+}
+
+nlohmann::json TestControl::Resume(std::string ipaddr){
+    auto list = this->_DevMap[ipaddr].GetItemlist();
+    auto itlist = this->_DevMap[ipaddr].GetCuritem();
+    nlohmann::json idlist;
+    while (itlist != list.end()){
+        nlohmann::json json_tmp = {
+            {"test_id", (*itlist).GetTestID()},
+            {"test_prog_start", (*itlist).GetTestCMD()}
+        };
+        ++itlist;
+    }
+    nlohmann::json json_ret = {
+        { "Method", "Start" },
+        { "Content", idlist}
+    };
+    return json_ret;
 }
 
 bool TestControl::SetStarted(std::string ipaddr, nlohmann::json content){
@@ -154,25 +252,44 @@ bool TestControl::SetStarted(std::string ipaddr, nlohmann::json content){
     return true;
 }
 
-void TestControl::Stop(std::string){};
+void TestControl::Stop(std::string ipaddr){}
 
 nlohmann::json TestControl::ItemResults(std::string ipaddr)
 {
+    nlohmann::json results;
+    for (IDINT id : MDBManager::Instance()->GetIDList()){
+        bool result = MDBManager::Instance()->GetItemResult(id, this->_DevMap[ipaddr].GetMac());
+        nlohmann::json tmp_json = {
+            {"test_id", id},
+            {"test_result", result}};
+        results.push_back(tmp_json);
+    }
+    return results;
+}
 
+bool TestControl::SetItemResult(std::string ipaddr, const nlohmann::json& msg){
+    bool ret = false;
+    if (!msg["Content"]["Result"].is_null()){
+        if (msg["Content"]["Result"]["test_id"].is_number() && msg["Content"]["Result"]["test_result"].is_boolean()){
+            IDINT id = msg["Content"]["Result"]["test_id"];
+            bool result = msg["Content"]["Result"]["test_result"];
+            (*this->_DevMap[ipaddr].GetCuritem()).SetResult(result);
+            // MDBManager::Instance()->SetItemResult(id, this->_DevMap[ipaddr].GetMac(), result);
+            ret = true;
+        }
+    }
+    return ret;
 }
 
 TestControl::TestControl(){}
 
 TestControl::~TestControl(){}
 
-
-
 std::string TestControl::GetSystime(){
     auto now = std::chrono::system_clock::now();
     time_t curtime = std::chrono::system_clock::to_time_t(now);
     return std::ctime(&curtime);
-};
-
+}
 
 bool TestControl::CheckReady(nlohmann::json content, std::string ipaddr){
     if (content.contains("MAC")  && !content["MAC"].is_null()){
@@ -183,8 +300,7 @@ bool TestControl::CheckReady(nlohmann::json content, std::string ipaddr){
     else {
         return false;
     }
-};
-
+}
 
 nlohmann::json TestControl::ItemList(std::string ipaddr)
 {

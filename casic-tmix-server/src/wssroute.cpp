@@ -1,5 +1,5 @@
 // global
-#include "wssrvroute.h"
+#include "wssroute.h"
 WSSrvRoute *WSSrvRoute::_This = nullptr;
 // global end
 
@@ -181,13 +181,15 @@ void WSSrvRoute::onMessage(std::shared_ptr<WsServer::Connection> connection,
             throw std::invalid_argument("Illegal message.");
         }
         if (from == "/tmix/items"){
-            _This->onItemMesg(msg, connection);// add thread
+            _This->onItemMesg(msg, connection);// add thread!!!
+            
         }
         else if (from == "/tmix/ui"){
-            _This->onUIMesg(msg, connection);// add thread
+            _This->onUIMesg(msg, connection);// add thread!!!
+            
         }
         else
-            LOG(WARNING) << "Illegal Path Visited by:"
+            LOG(WARNING) << "Illegal path visited by:"
                          << connection->remote_endpoint_address();
     } catch (std::exception &e) {
         _This->ErrorRespond(e.what(), connection);
@@ -225,19 +227,24 @@ void WSSrvRoute::onItemMesg(const std::string& msg, std::shared_ptr<WsServer::Co
         content = msg_obj["Content"];
     }
     else
-        throw std::invalid_argument("Content illegal");
+        throw std::invalid_argument("Content illegal or not exists");
 
     if(method == "TestReady"){ // decide the test machine is ready or not after recieve
-        if(!TestControl::Instance()->Start(ipaddr, content)){ErrorRespond("Not ready", connection);}
+        if (TestControl::Instance()->Prepare(ipaddr, content)){SendMsg(connection, TestControl::Instance()->Start(ipaddr).dump());}
+        else {this->ErrorRespond("client not ready", connection);}
     } else if (method == "Started"){
-        TestControl::Instance()->SetStarted(ipaddr,content);
-    } else if (method == "ItemConf"){
-        TestControl::Instance()->GetItemConf();
-    } else if (method == "TimeSync"){// need to repair
+        if (TestControl::Instance()->SetStarted(ipaddr,content)){}
+        else {ErrorRespond("Illegal testitem or Itemlist not ready", connection);}
+    } else if (method == "RelaodTest"){
+
+    } else if (method == "TimeSync"){
         _This->SendMsg(connection, TestControl::Instance()->GetSystime());
     } else if (method == "BroadCast"){
         this->BroadCast(content_str);
-    } else if (method == "Cooperate"){
+    } else if (method == "SetItemResult"){
+        if(!TestControl::Instance()->SetItemResult(ipaddr, content)){this->ErrorRespond("WrongResultContent",connection);}
+        else {this->ErrorRespond("illegal result content", connection);}
+    } else if (method == ""){
 
     } else{
         WSSrvRoute::Instance()->SendMsg(connection, "Illegal Message");

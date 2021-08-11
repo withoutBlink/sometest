@@ -1,5 +1,5 @@
-#ifndef WSSRVROUTE_H
-#define WSSRVROUTE_H
+#ifndef WSSROUTE_H
+#define WSSROUTE_H
 
 #include "utils/softwareabout.h"
 #include "nlohmann/json.hpp"
@@ -10,10 +10,10 @@
 
 using WsServer = SimpleWeb::SocketServer<SimpleWeb::WS>;
 
-class WSSrvRoute
+class WSSRoute
 {
 public:
-	static WSSrvRoute *Instance();
+    static WSSRoute *Instance();
 	void Init(WsServer::Endpoint& ep);
     void SendMsg(std::string& ipaddr, const std::string& msg);
     void BroadCast(const std::string& msg);
@@ -21,8 +21,8 @@ public:
     // void InitItem();
 
 private:
-	WSSrvRoute();
-	~WSSrvRoute();
+    WSSRoute();
+    ~WSSRoute();
 
     void SetConnection(std::shared_ptr<WsServer::Connection> connection);
     std::shared_ptr<WsServer::Connection> GetConnection(const std::string& addr);
@@ -41,7 +41,7 @@ private:
     void onUIMesg(const std::string& msg, std::shared_ptr<WsServer::Connection> connection);
 
 private:
-	static WSSrvRoute *_This;
+    static WSSRoute *_This;
     // std::map<std::string, std::string> _Key;
     std::map<std::string, std::shared_ptr<WsServer::Connection>> _UIConnection;
     std::map<std::string, std::shared_ptr<WsServer::Connection>> _ItemConnection;

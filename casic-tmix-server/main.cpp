@@ -37,10 +37,10 @@ int main()
 	service.config.thread_pool_size = std::thread::hardware_concurrency();
 
 	auto &uiroute = service.endpoint[std::string("^") + WS_URL_SVCUI + std::string("?$")];
-	WSSrvRoute::Instance()->Init(uiroute);
+	WSSRoute::Instance()->Init(uiroute);
 
 	auto &itemsroute = service.endpoint[std::string("^") + WS_URL_SVCITEMS + std::string("?$")];
-	WSSrvRoute::Instance()->Init(itemsroute);
+	WSSRoute::Instance()->Init(itemsroute);
 
 	LOG(INFO) << "Service Start: " << service.config.address << ":" << service.config.port;
 

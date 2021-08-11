@@ -1,9 +1,7 @@
 import threading
+import json
 import websocket
 import time
-
-
-# import json
 
 class WSClient(object):
     def __init__(self):
@@ -29,9 +27,9 @@ class WSClient(object):
         self.wbs.send(open(self.rulesfile + str(rulenum), 'r').read())
         time.sleep(1)
 
+
 if __name__ == '__main__':
     wbsc = WSClient()
     wbsc.start_connection()
     wbsc.send_defaultmsg(rulenum=5)
     wbsc.stop_connection()
-

@@ -214,7 +214,7 @@ bool MDBManager::GetItemResult(IDINT id, std::string MAC){
 bool MDBManager::InsertItem(nlohmann::json newitem){
     try {
     std::unique_ptr<sql::PreparedStatement> stmnt(this->_Conn->prepareStatement(
-                                                      "insert into (test_id, test_type, test_name, test_key, test_info, test_standard, test_start_prog, test_stop_prog, test_select) values(?,?,?,?,?,?,?,?,?)"
+                                                      "insert into itemlist (test_id, test_type, test_name, test_key, test_info, test_standard, test_start_prog, test_stop_prog, test_select) values (?,?,?,?,?,?,?,?,?)"
                                                       )
                                                   );
     stmnt->setInt(1, newitem["test_id"].get<int>());
@@ -264,6 +264,36 @@ nlohmann::json MDBManager::GetTestItem(u_int16_t id){
         LOG(ERROR) << "InsertList failed: " << e.what();
         return testitem;
     }
+}
+
+
+nlohmann::json MDBManager::GetServerConf(){
+    nlohmann::json serverconf;
+    try {
+    std::unique_ptr<sql::PreparedStatement> stmnt(this->_Conn->prepareStatement(
+                                                      "select * from config"
+                                                      )
+                                                  );
+    sql::ResultSet *output = stmnt->executeQuery();
+    output->next();
+    serverconf = {
+        {"ErrInterupt", output->getInt(1)},
+        {"ErrRepetitionCount", output->getInt(2)},
+        {"ErrRepetitionTime", output->getString(3)},
+        {"PortService", output->getInt(4)},
+        {"IP", output->getString(5)},
+        {"PortScanServer", output->getInt(6)},
+        {"PortServerHttp", output->getInt(7)},
+        {"PortServerWs", output->getInt(8)},
+    };
+    }
+    catch (sql::SQLException &e) {
+        LOG(ERROR) << "GetServerConf failed: " << e.what();
+        serverconf = {
+            {"PortService", "7063"}
+        };
+    }
+    return serverconf;
 }
 
 

@@ -1,0 +1,23 @@
+[2021-08-11 14:48:41,269 | ERROR] ../../casic-tmix-server/src/mdbmanager.cpp:290 : InsertList failed: Current position is before the first row
+[2021-08-11 14:48:41,269 | ERROR] ../../casic-tmix-server/src/config.cpp:31 : [json.exception.type_error.302] type must be number, but is string
+[2021-08-11 14:48:41,269 | INFO] ../../casic-tmix-server/main.cpp:45 : Service Start: :101
+[2021-08-11 14:52:50,949 | ERROR] ../../casic-tmix-server/src/mdbmanager.cpp:290 : InsertList failed: Current position is before the first row
+[2021-08-11 14:52:50,949 | ERROR] ../../casic-tmix-server/src/config.cpp:31 : [json.exception.type_error.302] type must be number, but is string
+[2021-08-11 14:52:50,949 | INFO] ../../casic-tmix-server/main.cpp:45 : Service Start: :101
+[2021-08-11 14:54:18,990 | ERROR] ../../casic-tmix-server/src/mdbmanager.cpp:290 : InsertList failed: Current position is before the first row
+[2021-08-11 14:54:18,990 | ERROR] ../../casic-tmix-server/src/config.cpp:31 : [json.exception.type_error.302] type must be number, but is string
+[2021-08-11 14:54:18,990 | INFO] ../../casic-tmix-server/main.cpp:45 : Service Start: :101
+[2021-08-11 14:55:00,221 | ERROR] ../../casic-tmix-server/src/mdbmanager.cpp:290 : InsertList failed: Current position is before the first row
+[2021-08-11 14:55:00,221 | ERROR] ../../casic-tmix-server/src/config.cpp:31 : [json.exception.type_error.302] type must be number, but is string
+[2021-08-11 14:55:00,221 | INFO] ../../casic-tmix-server/main.cpp:45 : Service Start: :101
+[2021-08-11 14:55:37,165 | ERROR] ../../casic-tmix-server/src/mdbmanager.cpp:290 : InsertList failed: Current position is before the first row
+[2021-08-11 14:55:37,166 | ERROR] ../../casic-tmix-server/src/config.cpp:31 : [json.exception.type_error.302] type must be number, but is string
+[2021-08-11 14:55:37,166 | INFO] ../../casic-tmix-server/main.cpp:45 : Service Start: :101
+[2021-08-11 15:01:34,276 | ERROR] ../../casic-tmix-server/src/mdbmanager.cpp:290 : InsertList failed: Current position is before the first row
+[2021-08-11 15:01:34,276 | ERROR] ../../casic-tmix-server/src/config.cpp:31 : [json.exception.type_error.302] type must be number, but is string
+[2021-08-11 15:01:34,276 | INFO] ../../casic-tmix-server/main.cpp:45 : Service Start: :101
+[2021-08-11 15:10:10,966 | ERROR] ../../casic-tmix-server/src/mdbmanager.cpp:290 : InsertList failed: Current position is before the first row
+[2021-08-11 15:10:10,967 | ERROR] ../../casic-tmix-server/src/config.cpp:31 : [json.exception.type_error.302] type must be number, but is string
+[2021-08-11 15:10:10,967 | INFO] ../../casic-tmix-server/main.cpp:45 : Service Start: :101
+[2021-08-11 15:22:25,703 | INFO] ../../casic-tmix-server/main.cpp:45 : Service Start: :151
+[2021-08-11 15:24:45,588 | INFO] ../../casic-tmix-server/main.cpp:45 : Service Start: :7063

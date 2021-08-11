@@ -31,7 +31,7 @@ class TestItem
 {
 public:
     TestItem(IDINT id);
-    ~TestItem();
+    // ~TestItem();
 
     size_t GetStatus();
     void SetStarted();
@@ -117,7 +117,7 @@ private:
 private:
     static TestControl *_This;
     RWLock _Lock;
-    std::map<std::string, TargetDev> _DevMap;// ipaddr and targetdev map
+    std::map<std::string, TargetDev*> _DevMap;// ipaddr and targetdev map
 };
 
 #endif // TESTCONTROL_H

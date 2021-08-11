@@ -33,7 +33,7 @@ int main()
 //	monitortemp.Start();
 
 	WsServer service;
-	service.config.port = Config::Instance()->Data.PortService;
+    service.config.port = Config::Instance()->GetServicePort();
 	service.config.thread_pool_size = std::thread::hardware_concurrency();
 
 	auto &uiroute = service.endpoint[std::string("^") + WS_URL_SVCUI + std::string("?$")];

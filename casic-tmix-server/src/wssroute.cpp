@@ -1,18 +1,18 @@
 // global
 #include "wssroute.h"
-WSSrvRoute *WSSrvRoute::_This = nullptr;
+WSSRoute *WSSRoute::_This = nullptr;
 // global end
 
 // public
-WSSrvRoute *WSSrvRoute::Instance()
+WSSRoute *WSSRoute::Instance()
 {
 	if (!_This) {
-		_This = new WSSrvRoute;
+        _This = new WSSRoute;
 	}
 	return _This;
 }
 
-void WSSrvRoute::Init(WsServer::Endpoint &ep)
+void WSSRoute::Init(WsServer::Endpoint &ep)
 {
 	ep.on_open = onOpen;
 	ep.on_close = onClose;
@@ -20,11 +20,11 @@ void WSSrvRoute::Init(WsServer::Endpoint &ep)
 	ep.on_message = onMessage;
 }
 
-void WSSrvRoute::SendMsg(std::string& ipaddr, const std::string& msg){
+void WSSRoute::SendMsg(std::string& ipaddr, const std::string& msg){
     this->SendMsg(this->GetConnection(ipaddr), msg);
 }
 
-void WSSrvRoute::BroadCast(const std::string& msg){
+void WSSRoute::BroadCast(const std::string& msg){
     nlohmann::json message = {
         {"Method","BroadCast"},
         {"Content",msg}};
@@ -36,13 +36,13 @@ void WSSrvRoute::BroadCast(const std::string& msg){
 
 
 // private function
-WSSrvRoute::WSSrvRoute(){
+WSSRoute::WSSRoute(){
 
 }
 
-WSSrvRoute::~WSSrvRoute(){}
+WSSRoute::~WSSRoute(){}
 
-void WSSrvRoute::SetConnection(std::shared_ptr<WsServer::Connection> connection)
+void WSSRoute::SetConnection(std::shared_ptr<WsServer::Connection> connection)
 {
     std::lock_guard<std::mutex>(this->_ConnectionMutex);
     std::string addr = connection->remote_endpoint_address();
@@ -63,7 +63,7 @@ void WSSrvRoute::SetConnection(std::shared_ptr<WsServer::Connection> connection)
     //this->_ConnectionMutex.unlock();
 }
 
-std::shared_ptr<WsServer::Connection> WSSrvRoute::GetConnection(const std::string& addr)
+std::shared_ptr<WsServer::Connection> WSSRoute::GetConnection(const std::string& addr)
 {
 //    if (this->_Connection[addr] != nullptr)
 //        return this->_UIConnection[addr];
@@ -71,9 +71,9 @@ std::shared_ptr<WsServer::Connection> WSSrvRoute::GetConnection(const std::strin
         return this->_ItemConnection[addr];
 }
 
-std::shared_ptr<WsServer::Connection> WSSrvRoute::GetConnection(const std::uint16_t& id){};
+std::shared_ptr<WsServer::Connection> WSSRoute::GetConnection(const std::uint16_t& id){};
 
-void WSSrvRoute::SendMsg(std::shared_ptr<WsServer::Connection> connection, const std::string &msg)
+void WSSRoute::SendMsg(std::shared_ptr<WsServer::Connection> connection, const std::string &msg)
 {
     if (msg.empty())
         return ;
@@ -96,7 +96,7 @@ void WSSrvRoute::SendMsg(std::shared_ptr<WsServer::Connection> connection, const
                      << "message failed";
 }
 
-void WSSrvRoute::ErrorRespond(std::string err, std::shared_ptr<WsServer::Connection> connection){
+void WSSRoute::ErrorRespond(std::string err, std::shared_ptr<WsServer::Connection> connection){
     nlohmann::json respond = {
         {"Method","Error"},
         {"Content",err}
@@ -104,14 +104,14 @@ void WSSrvRoute::ErrorRespond(std::string err, std::shared_ptr<WsServer::Connect
     _This->SendMsg(connection, respond.dump());
 }
 
-void WSSrvRoute::CloseConnection(std::shared_ptr<WsServer::Connection> connection){
+void WSSRoute::CloseConnection(std::shared_ptr<WsServer::Connection> connection){
     LOG(INFO) << "Disconnect from"
               << connection->remote_endpoint_address();
     this->_UIConnection[connection->remote_endpoint_address()] = nullptr;
     this->_ItemConnection[connection->remote_endpoint_address()] = nullptr;
 }
 
-void WSSrvRoute::onOpen(std::shared_ptr<WsServer::Connection> connection)
+void WSSRoute::onOpen(std::shared_ptr<WsServer::Connection> connection)
 {
     std::string remote_address = connection->remote_endpoint_address();
     uint remote_port = connection->remote_endpoint_port();
@@ -123,7 +123,7 @@ void WSSrvRoute::onOpen(std::shared_ptr<WsServer::Connection> connection)
     _This->SetConnection(connection);
 }
 
-void WSSrvRoute::onClose(std::shared_ptr<WsServer::Connection> connection,
+void WSSRoute::onClose(std::shared_ptr<WsServer::Connection> connection,
 			 int status, const std::string &)
 {
     LOG(DEBUG) << "Closed connection: "
@@ -136,10 +136,10 @@ void WSSrvRoute::onClose(std::shared_ptr<WsServer::Connection> connection,
                << " with status code "
                << status;
     _This->CloseConnection(connection);
-    WSSrvRoute::Instance()->SendMsg(connection, "disconnected");
+    WSSRoute::Instance()->SendMsg(connection, "disconnected");
 }
 
-void WSSrvRoute::onError(std::shared_ptr<WsServer::Connection> connection,
+void WSSRoute::onError(std::shared_ptr<WsServer::Connection> connection,
 			 const SimpleWeb::error_code &ec)
 {
 	LOG(WARNING) << "Error in connection "
@@ -153,7 +153,7 @@ void WSSrvRoute::onError(std::shared_ptr<WsServer::Connection> connection,
 		     << ec.message();
 }
 
-void WSSrvRoute::onMessage(std::shared_ptr<WsServer::Connection> connection,
+void WSSRoute::onMessage(std::shared_ptr<WsServer::Connection> connection,
 			   std::shared_ptr<WsServer::Message> message)
 {
     std::string msg = message->string();
@@ -197,7 +197,7 @@ void WSSrvRoute::onMessage(std::shared_ptr<WsServer::Connection> connection,
 	}
 }
 
-void WSSrvRoute::onUIMesg(const std::string& msg, std::shared_ptr<WsServer::Connection> connection){
+void WSSRoute::onUIMesg(const std::string& msg, std::shared_ptr<WsServer::Connection> connection){
     std::lock_guard<std::mutex>(this->_ConnectionMutex);
     nlohmann::json msg_obj = nlohmann::json::parse(msg);
     std::string method = msg_obj["Method"];
@@ -213,7 +213,7 @@ void WSSrvRoute::onUIMesg(const std::string& msg, std::shared_ptr<WsServer::Conn
         throw std::invalid_argument("Content illegal");
 }// end of onUIMesg
 
-void WSSrvRoute::onItemMesg(const std::string& msg, std::shared_ptr<WsServer::Connection> connection){
+void WSSRoute::onItemMesg(const std::string& msg, std::shared_ptr<WsServer::Connection> connection){
     std::lock_guard<std::mutex>(this->_ConnectionMutex);
     nlohmann::json msg_obj = nlohmann::json::parse(msg);
     std::string method = msg_obj["Method"];
@@ -247,7 +247,7 @@ void WSSrvRoute::onItemMesg(const std::string& msg, std::shared_ptr<WsServer::Co
     } else if (method == ""){
 
     } else{
-        WSSrvRoute::Instance()->SendMsg(connection, "Illegal Message");
+        WSSRoute::Instance()->SendMsg(connection, "Illegal Message");
         LOG(WARNING) << "Unrecongnized method:"
                      << method;
     }

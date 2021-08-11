@@ -183,8 +183,8 @@ bool TestControl::Prepare(std::string ipaddr, nlohmann::json content)
 }
 
 bool TestControl::isFresh(std::string ipaddr){
-    IDINT curid = this->_DevMap[ipaddr].GetCuritemID();
-    IDINT firstid = this->_DevMap[ipaddr].GetItemlist().front().GetTestID();
+    IDINT curid = this->_DevMap[ipaddr]->GetCuritemID();
+    IDINT firstid = this->_DevMap[ipaddr]->GetItemlist().front().GetTestID();
     if (curid == firstid){return true;}
     else {return false;}
 }
@@ -211,7 +211,7 @@ nlohmann::json TestControl::Start(std::string ipaddr){
 }
 
 nlohmann::json TestControl::FreshStart(std::string ipaddr){
-    auto mid_tmp = this->_DevMap[ipaddr].GetItemlist();
+    auto mid_tmp = this->_DevMap[ipaddr]->GetItemlist();
     nlohmann::json idlist;
     for (TestItem testitem : mid_tmp){
         nlohmann::json json_tmp = {
@@ -228,8 +228,8 @@ nlohmann::json TestControl::FreshStart(std::string ipaddr){
 }
 
 nlohmann::json TestControl::Resume(std::string ipaddr){
-    auto list = this->_DevMap[ipaddr].GetItemlist();
-    auto itlist = this->_DevMap[ipaddr].GetCuritem();
+    auto list = this->_DevMap[ipaddr]->GetItemlist();
+    auto itlist = this->_DevMap[ipaddr]->GetCuritem();
     nlohmann::json idlist;
     while (itlist != list.end()){
         nlohmann::json json_tmp = {
@@ -248,7 +248,7 @@ nlohmann::json TestControl::Resume(std::string ipaddr){
 bool TestControl::SetStarted(std::string ipaddr, nlohmann::json content){
     if (content["test_id"].is_null()){return false;}
     IDINT testid = content["test_id"];
-    MDBManager::Instance()->SetStatus(testid, this->_DevMap[ipaddr].GetMac(),2);
+    MDBManager::Instance()->SetStatus(testid, this->_DevMap[ipaddr]->GetMac(),2);
     return true;
 }
 
@@ -258,7 +258,7 @@ nlohmann::json TestControl::ItemResults(std::string ipaddr)
 {
     nlohmann::json results;
     for (IDINT id : MDBManager::Instance()->GetIDList()){
-        bool result = MDBManager::Instance()->GetItemResult(id, this->_DevMap[ipaddr].GetMac());
+        bool result = MDBManager::Instance()->GetItemResult(id, this->_DevMap[ipaddr]->GetMac());
         nlohmann::json tmp_json = {
             {"test_id", id},
             {"test_result", result}};
@@ -273,7 +273,7 @@ bool TestControl::SetItemResult(std::string ipaddr, const nlohmann::json& msg){
         if (msg["Content"]["Result"]["test_id"].is_number() && msg["Content"]["Result"]["test_result"].is_boolean()){
             IDINT id = msg["Content"]["Result"]["test_id"];
             bool result = msg["Content"]["Result"]["test_result"];
-            (*this->_DevMap[ipaddr].GetCuritem()).SetResult(result);
+            (*this->_DevMap[ipaddr]->GetCuritem()).SetResult(result);
             // MDBManager::Instance()->SetItemResult(id, this->_DevMap[ipaddr].GetMac(), result);
             ret = true;
         }
@@ -293,8 +293,8 @@ std::string TestControl::GetSystime(){
 
 bool TestControl::CheckReady(nlohmann::json content, std::string ipaddr){
     if (content.contains("MAC")  && !content["MAC"].is_null()){
-        TargetDev dev(ipaddr, content["MAC"]);
-        this->_DevMap[ipaddr]=dev;// add ready device to device map
+        TargetDev *dev= new TargetDev(ipaddr, content["MAC"]);
+        this->_DevMap[ipaddr] = dev;// add ready device to device map
         return true;
     }
     else {
@@ -305,7 +305,7 @@ bool TestControl::CheckReady(nlohmann::json content, std::string ipaddr){
 nlohmann::json TestControl::ItemList(std::string ipaddr)
 {
     this->_Lock.LockR();
-    std::string MAC = this->_DevMap[ipaddr].GetMac();
+    std::string MAC = this->_DevMap[ipaddr]->GetMac();
     nlohmann::json tmpjson = MDBManager::Instance()->GetTestList();
     this->_Lock.UNLock();
     return tmpjson;

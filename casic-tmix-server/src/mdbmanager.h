@@ -12,6 +12,7 @@
 #include <iostream>
 #include <cstring>
 #include <mariadb/conncpp.hpp>
+#include <nlohmann/json.hpp>
 
 
 
@@ -38,13 +39,13 @@ public:
     bool SetStatus(IDINT id, std::string MAC, u_int8_t status);// 0: not tested, 1: tested, 2: testing, 3: error
     bool SetItemResult(IDINT id, std::string MAC, bool result);// 0: not pass, 1: pass
     bool GetItemResult(IDINT id, std::string MAC);
-
+    bool SetServerConf(nlohmann::json); // TODO
+    nlohmann::json GetServerConf();
 
 
 private:
     MDBManager();
     ~MDBManager();
-
 
 
     std::string GetItemCMD(IDINT id);

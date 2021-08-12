@@ -9,5 +9,3 @@ build*
 *.sqlite3
 *.txt
 *.tar.gz
-common*
-*common*

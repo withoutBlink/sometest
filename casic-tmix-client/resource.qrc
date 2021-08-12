@@ -1,0 +1,33 @@
+<RCC>
+    <qresource prefix="/">
+        <file>assets/basic.css</file>
+        <file>static/images/icon_logo.svg</file>
+        <file>static/images/icon_close.svg</file>
+        <file>static/images/icon_max.svg</file>
+        <file>static/images/icon_min.svg</file>
+        <file>static/images/icon_restore.svg</file>
+        <file>static/images/icon_home_act.svg</file>
+        <file>static/images/icon_home_def.svg</file>
+        <file>static/images/icon_toolbox_act.svg</file>
+        <file>static/images/icon_toolbox_def.svg</file>
+        <file>static/images/icon_logs_act.svg</file>
+        <file>static/images/icon_logs_def.svg</file>
+        <file>static/fonts/runninghand.ttf</file>
+        <file>static/images/icon_background.svg</file>
+        <file>static/images/icon_aboutus_act.svg</file>
+        <file>static/images/icon_aboutus_def.svg</file>
+        <file>static/images/icon_706.png</file>
+        <file>static/images/icon_affirm.gif</file>
+        <file>static/images/icon_failed.gif</file>
+        <file>static/images/icon_information.gif</file>
+        <file>static/images/icon_question.gif</file>
+        <file>static/images/icon_wait.gif</file>
+        <file>static/images/icon_warning.gif</file>
+        <file>static/images/add-line_horizontal.png</file>
+        <file>static/images/add-line_vertical.png</file>
+        <file>static/images/sub-line_horizontal.png</file>
+        <file>static/images/sub-line_vertical.png</file>
+        <file>assets/welcome.txt</file>
+        <file>static/fonts/JetBrainsMono-Medium.ttf</file>
+    </qresource>
+</RCC>

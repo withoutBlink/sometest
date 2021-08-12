@@ -1,8 +1,6 @@
 *.md
 casic-tmix-cases*
 *casic-tmix-cases*
-casic-tmix-client*
-*casic-tmix-client*
 *build*
 build*
 *.tar.gz

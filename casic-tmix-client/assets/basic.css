@@ -1,0 +1,320 @@
+/*
+ * Author:      徐哲阳
+ * FileName:    basic.css
+ * CreatedDate: 2021-01-28 03:46:49
+ * Contact:     <xuzheyangchn@foxmail.com>
+ * Description:
+ */
+
+* {
+	color: #8790b9;
+	font-size: 14px;
+}
+
+*[XUIFont = 'ExtraLarge'] {
+	font-size: 64px;
+}
+
+*[XUIFont = 'Large'] {
+	font-size: 24px;
+}
+
+*[XUIFont = 'Medium'] {
+	font-size: 16px;
+}
+
+*[XUIFont = 'Small'] {
+	font-size: 14px;
+}
+
+*[XUIFont = 'Mini'] {
+	font-size: 12px;
+}
+
+*[XUIRound = 'MiniRound'] {
+    border-radius: 3px;
+}
+
+*[XUIRound = 'SmallRound'] {
+    border-radius: 5px;
+}
+
+*[XUIRound = 'MediumRound'] {
+    border-radius: 12px;
+}
+
+*[XUIRound = 'LargeRound'] {
+    border-radius: 37px;
+}
+
+*[XUIStatus = '0'] {
+    font:  12px;
+    border: 3px solid #999999;
+    background: #999999;
+}
+
+*[XUIStatus = '1'] {
+    font:  12px;
+    border: 3px solid #08D550;
+    background: #08D550;
+}
+
+*[XUIStatus = '2'] {
+    font:  12px;
+    border: 3px solid #E82143;
+    background: #E82143;
+}
+
+*[XUIStatus = '3'] {
+    font:  12px;
+    border: 3px solid #FF6F00;
+    background: #FF6F00;
+}
+
+*[XUIColor = 'White'] {
+    color: #F0F0F0;
+}
+
+*[XUIError = true] {
+    border: 1px solid red;
+}
+
+QPushButton {
+    border: none;
+    background: transparent;
+}
+
+QPushButton:hover {
+    padding: 0 3px 3px 0;
+}
+
+QPushButton[XUIBtn = 'BtnClose']:hover {
+    background: red;
+}
+
+QPushButton[XUIBtn = 'BtnMenu'] {
+    font-size: 16px;
+}
+
+QPushButton[XUIBtn = 'BtnMenu']:checked {
+    color: #0090ff;
+    border-top: 3px solid #0090ff;
+/*	border-top: 3px solid qlineargradient(
+            spread:pad,
+            x1:0, y1:0, x2:1, y2:0,
+            stop:0 transparent,
+            stop:0.1 transparent,
+            stop:0.11 #0090FF,
+            stop:0.9 #0090FF,
+            stop:0.91 transparent,
+            stop:1 transparent
+    );
+*/
+}
+
+QPushButton[XUIBtn = 'MsgBtnCancel'] {
+    color: #E82143;
+    font-size: 14px;
+    border: 1px solid #E82143;
+    border-radius: 5px;
+}
+
+QPushButton[XUIBtn = 'MsgBtnAffirm'] {
+    color: #1660FD;
+    font-size: 14px;
+    border: 1px solid #1660FD;
+    border-radius: 5px;
+}
+
+QPushButton[XUIBtn = 'MsgBtnDefault'] {
+    font-size: 16px;
+}
+
+QPushButton[XUIStyleClass = 'BtnStart'] {
+    color: #FFFFFF;
+    background: #1660FD;
+    border: 1px solid #1660FD;
+    border-radius: 37px;
+}
+
+QLabel[XUIStyleClass = 'Title'] {
+	color: #0090FF;
+}
+
+QWidget#WGBackGround {
+	background-image: url(:/static/images/icon_background.svg);
+}
+
+QWidget[XUIStyleClass = 'TitleBar'] {
+    border: 1px solid #202747;
+    background: #202747;
+}
+
+QWidget[XUIStyleClass = 'Body'] {
+    border: 1px solid #151935;
+    background: #151935;
+}
+
+QWidget[XUIStyleClass = 'Content'] {
+    border: 1px solid #1C2340;
+    background: #1C2340;
+}
+
+QTableWidget {
+	background: transparent;
+}
+
+QLineEdit {
+    color: #FFFFFF;
+    font-size: 14px;
+    padding-left: 15px;
+    border-radius: 5px;
+    border: 1px solid #2E3558;
+    placeholder-color: ;
+    background: transparent;
+}
+
+QTextEdit {
+    padding-left: 20px;
+}
+
+QTableWidget {
+    font:  12px;
+    outline: none;
+    background: transparent;
+}
+
+QTableWidget::item {
+    height: 30px;
+    border: none;
+}
+
+QTableWidget::item:selected {
+    outline: none;
+    color: #F0F0F0;
+    background: #2E3558;
+}
+
+QHeaderView {
+    border: none;
+    font-size: 12px;
+    color: #5E6BA2;
+    background: #1C2340;
+}
+
+QHeaderView::section {
+    border: none;
+    color: #5E6BA2;
+    background: #1C2340;
+}
+
+
+QScrollBar:vertical {
+    width: 10px;
+    background-color: transparent;
+}
+
+/* 垂直滚动条 */
+QScrollBar::handle:vertical {
+    min-height:8px;
+    border: 1px solid #2E3558;
+    border-radius: 4px;
+    background: #2E3558;
+}
+
+/* 鼠标停留在垂直滚动条上 */
+QScrollBar::handle:vertical:hover {
+    width:8px;
+    background: #353D65;
+}
+
+/* 鼠标停留在垂直滚动条上 */
+QScrollBar::handle:vertical:pressed {
+    width:8px;
+    background: #2E3558;
+}
+
+/* 辅助器下 */
+/*QScrollBar::add-line:vertical {
+    border: none;
+    height: 10px;
+    width: 10px;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+    background: #1C2340;
+    border-image:url(:/static/images/add-line_vertical.png);
+}*/
+
+/* 辅助器上 */
+/*QScrollBar::sub-line:vertical {
+    border: none;
+    height: 10px;
+    width: 10px;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+    background: #1C2340;
+    border-image:url(:/static/images/sub-line_vertical.png);
+}*/
+
+/* 滑块之外区域 */
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    width:10px;
+    background: #1C2340;
+}
+
+/* 滑块上内容 */
+QScrollBar:up-arrow:vertical {
+}
+
+/* 滑块下内容 */
+QScrollBar:down-arrow:vertical {
+}
+
+/*QScrollBar:horizontal {
+    height:10px;
+    background-color:rgba(0,0,0,0%);
+    padding-left:10px;
+    padding-right:10px;
+    border: 1px solid #1C2340;
+    border-left: 0px;
+}
+
+QScrollBar::handle:horizontal {
+    min-width:10px;
+    background: #202747;
+}
+
+QScrollBar::handle:horizontal:hover {
+    height:8px;
+    background: #202747;
+}
+
+QScrollBar::handle:horizontal:pressed {
+    height:8px;
+    background: #202747;
+}
+
+QScrollBar::add-line:horizontal {
+    height:10px;
+    width:10px;
+    subcontrol-position: right;
+    subcontrol-origin: margin;
+    border-image:url(:/static/images/add-line_horizontal.png);
+}
+
+QScrollBar::sub-line:horizontal {
+    height:10px;
+    width:10px;
+    subcontrol-position: left;
+    subcontrol-origin: margin;
+    border-image:url(:/static/images/sub-line_horizontal.png);
+}
+
+QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal {
+    height:10px;
+    background: #1C2340;
+}
+*/
+
+

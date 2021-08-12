@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1185</width>
+    <height>736</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="WGBackGround">
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
+   <property name="XUIStyleClass" stdset="0">
+    <string>Body</string>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QWidget" name="TitleBar" native="true">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>55</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>55</height>
+       </size>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <property name="spacing">
+        <number>5</number>
+       </property>
+       <property name="leftMargin">
+        <number>15</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>5</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="LBLogo">
+         <property name="minimumSize">
+          <size>
+           <width>16</width>
+           <height>16</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16</width>
+           <height>16</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">image: url(:/static/images/icon_logo.svg);</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="LBTitle">
+         <property name="text">
+          <string>T-Mix</string>
+         </property>
+         <property name="XUIStyleClass" stdset="0">
+          <string>Title</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="BtnAboutUS">
+         <property name="minimumSize">
+          <size>
+           <width>55</width>
+           <height>55</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>55</width>
+           <height>55</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>关于我们</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../resource.qrc">
+           <normaloff>:/static/images/icon_aboutus_def.svg</normaloff>:/static/images/icon_aboutus_def.svg</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="BtnMinimized">
+         <property name="minimumSize">
+          <size>
+           <width>55</width>
+           <height>55</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>55</width>
+           <height>55</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>最小化</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../resource.qrc">
+           <normaloff>:/static/images/icon_min.svg</normaloff>:/static/images/icon_min.svg</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="BtnMaximized">
+         <property name="minimumSize">
+          <size>
+           <width>55</width>
+           <height>55</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>55</width>
+           <height>55</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>最大化</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../resource.qrc">
+           <normaloff>:/static/images/icon_max.svg</normaloff>
+           <activeon>:/static/images/icon_restore.svg</activeon>
+           <selectedon>:/static/images/icon_restore.svg</selectedon>:/static/images/icon_max.svg</iconset>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="BtnClose">
+         <property name="minimumSize">
+          <size>
+           <width>55</width>
+           <height>55</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>55</width>
+           <height>55</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>关闭程序</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../resource.qrc">
+           <normaloff>:/static/images/icon_close.svg</normaloff>:/static/images/icon_close.svg</iconset>
+         </property>
+         <property name="XUIBtn" stdset="0">
+          <string>BtnClose</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QStackedWidget" name="SWBodyPages">
+      <property name="currentIndex">
+       <number>1</number>
+      </property>
+      <widget class="QWidget" name="MainPage">
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QStackedWidget" name="SWBallotView">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="PageHome" name="WGHomeView"/>
+          <widget class="PageToolboxes" name="WGToolBoxes"/>
+          <widget class="PageJournal" name="WGLogView"/>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="ToolBtnboxes" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>135</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>135</height>
+           </size>
+          </property>
+          <property name="XUIStyleClass" stdset="0">
+           <string>Content</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <property name="spacing">
+            <number>5</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QPushButton" name="BtnHome">
+             <property name="minimumSize">
+              <size>
+               <width>200</width>
+               <height>135</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>200</width>
+               <height>135</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>引导测试</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../resource.qrc">
+               <normaloff>:/static/images/icon_home_def.svg</normaloff>
+               <activeoff>:/static/images/icon_home_act.svg</activeoff>
+               <activeon>:/static/images/icon_home_act.svg</activeon>:/static/images/icon_home_def.svg</iconset>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+             <property name="autoExclusive">
+              <bool>true</bool>
+             </property>
+             <property name="XUIBtn" stdset="0">
+              <string>BtnMenu</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="BtnToolBox">
+             <property name="minimumSize">
+              <size>
+               <width>200</width>
+               <height>135</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>200</width>
+               <height>135</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>工具箱</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../resource.qrc">
+               <normaloff>:/static/images/icon_toolbox_def.svg</normaloff>
+               <activeoff>:/static/images/icon_toolbox_act.svg</activeoff>
+               <activeon>:/static/images/icon_toolbox_act.svg</activeon>:/static/images/icon_toolbox_def.svg</iconset>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <property name="autoExclusive">
+              <bool>true</bool>
+             </property>
+             <property name="XUIBtn" stdset="0">
+              <string>BtnMenu</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="BtnLogs">
+             <property name="minimumSize">
+              <size>
+               <width>200</width>
+               <height>135</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>200</width>
+               <height>135</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>测试记录</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../resource.qrc">
+               <normaloff>:/static/images/icon_logs_def.svg</normaloff>
+               <activeoff>:/static/images/icon_logs_act.svg</activeoff>
+               <activeon>:/static/images/icon_logs_act.svg</activeon>:/static/images/icon_logs_def.svg</iconset>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <property name="autoExclusive">
+              <bool>true</bool>
+             </property>
+             <property name="XUIBtn" stdset="0">
+              <string>BtnMenu</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>562</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="PageTest" name="TestPage"/>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PageHome</class>
+   <extends>QWidget</extends>
+   <header>pagehome.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PageToolboxes</class>
+   <extends>QWidget</extends>
+   <header>pagetoolboxes.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PageJournal</class>
+   <extends>QWidget</extends>
+   <header>pagejournal.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PageTest</class>
+   <extends>QWidget</extends>
+   <header>pagetest.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="../resource.qrc"/>
+ </resources>
+ <connections/>
+</ui>

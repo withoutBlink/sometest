@@ -1,7 +1,8 @@
 *.md
 casic-tmix-cases*
 casic-tmix-client*
-build/*
+*build*
+build*
 *.tar.gz
 *.sqlite3
 *.txt

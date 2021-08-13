@@ -101,6 +101,10 @@ public:
     bool SetItemResult(std::string ipaddr, const nlohmann::json& msg);
     bool Reload();
 
+
+    //For program testing
+
+
 private:
     TestControl();
     ~TestControl();

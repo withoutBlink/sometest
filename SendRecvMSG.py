@@ -9,7 +9,7 @@ class WSClient(object):
     def __init__(self):
         self.listening = threading.Thread(target=self.on_respond)
         self.wbs = websocket.WebSocket()
-        self.server_addr = 'ws://127.0.0.1:7064/tmix/items'
+        self.server_addr = 'ws://127.0.0.1:7063/tmix/items'
         self.rulesfile = '/home/ht706/casic-tmix/rules/rule_'
 
     def on_respond(self):

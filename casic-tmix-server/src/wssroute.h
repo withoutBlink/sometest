@@ -37,8 +37,8 @@ private:
                 const SimpleWeb::error_code &ec);
     static void onMessage(std::shared_ptr<WsServer::Connection> connection,
                   std::shared_ptr<WsServer::Message> message);
-    void onItemMesg(const std::string& msg, std::shared_ptr<WsServer::Connection> connection);
-    void onUIMesg(const std::string& msg, std::shared_ptr<WsServer::Connection> connection);
+    void onItemMesg(const nlohmann::json request, std::shared_ptr<WsServer::Connection> connection);
+    void onUIMesg(const nlohmann::json request, std::shared_ptr<WsServer::Connection> connection);
 
 private:
     static WSSRoute *_This;

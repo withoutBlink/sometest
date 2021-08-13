@@ -245,6 +245,7 @@ nlohmann::json MDBManager::GetTestItem(u_int16_t id){
 
     stmnt->setInt(1, id);
     sql::ResultSet *output = stmnt->executeQuery();
+    output->next();
     testitem = {
         {"test_id", output->getInt(1)},
         {"test_type", output->getInt(2)},

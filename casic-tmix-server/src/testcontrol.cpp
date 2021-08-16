@@ -7,15 +7,23 @@ TestControl *TestControl::_This = nullptr;
 TestItem::TestItem(IDINT id)
     :_test_id(id){
     nlohmann::json iteminfo = MDBManager::Instance()->GetTestItem(this->_test_id);
-    LOG(INFO) << "Get test info from database" << iteminfo.dump();
+    LOG(INFO) << "Get data from database" << iteminfo.dump();
     this->_test_type = iteminfo["test_type"];
+    LOG(INFO) << "Get test type" ;
     this->_test_name = iteminfo["test_name"];
+    LOG(INFO) << "Get test name" ;
     this->_test_key = iteminfo["test_key"];
+    LOG(INFO) << "Get test key" ;
     this->_test_info = iteminfo["test_info"];
+    LOG(INFO) << "Get test info" ;
     this->_test_standard = iteminfo["test_standard"];
+    LOG(INFO) << "Get test standard" ;
     this->_test_start_prog = iteminfo["test_start_prog"];
-    this->_test_stop_prog = iteminfo["test_stop_porg"];
-    this->_test_select = iteminfo["test_select"];
+    LOG(INFO) << "Get test start_prog" ;
+    this->_test_stop_prog = iteminfo["test_stop_prog"];
+    LOG(INFO) << "Get test stop_prog" ;
+    // this->_test_select = iteminfo["test_select"];
+    // LOG(INFO) << "Get test selected" ;
     LOG(INFO) << "Finish get test info";
 }
 
@@ -136,9 +144,10 @@ std::vector<TestItem> TargetDev::GetErrlist(){
 
 TargetDev::TargetDev(std::string mac, std::string ipaddr)
     :_MAC(mac),_IP(ipaddr){
-    LOG(INFO) << "Ready to init itemlist";
+    LOG(INFO) << mac <<" Ready to init itemlist";
     this->_ItemList = this->InitItemlist();
     LOG(INFO) << this->_ItemList.front().GetTestID();
+    // CurItem is not set during initiation;
     std::vector<TestItem>::iterator curitem;
     IDINT curid = MDBManager::Instance()->GetCurItemId(mac);
     for (curitem = this->_ItemList.begin();curitem != this->_ItemList.end();curitem++){
@@ -193,7 +202,7 @@ bool TestControl::Prepare(std::string ipaddr, nlohmann::json content)
    if (content.contains("MAC") && !content["MAC"].is_null()){
        LOG(INFO) << ipaddr << ": Ready";
        try {
-           TargetDev * dev = new TargetDev(ipaddr, content["MAC"]);
+           TargetDev * dev = new TargetDev(content["MAC"], ipaddr);
            this->_DevMap[ipaddr] = dev;// add ready device to device map
        } catch (std::exception &e) {
            LOG(ERROR) << e.what();

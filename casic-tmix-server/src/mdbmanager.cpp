@@ -86,7 +86,7 @@ nlohmann::json MDBManager::GetAllTest()
                 {"test_standard", output->getString(6)},
                 {"test_start_prog", output->getString(7)},
                 {"test_stop_prog", output->getString(8)},
-                {"test_select", output->getInt(9)},
+                {"test_select", output->getBoolean(9)},
                 {"test_index", output->getInt(10)}
             };
 			ret.push_back(temp);
@@ -137,7 +137,7 @@ IDINT MDBManager::GetCurItemId(std::string MAC)
         }
         return curid;
     } catch (sql::SQLException &e) {
-        LOG(ERROR) << "GetCurItemID from: " << MAC <<" error:" << e.what();
+        LOG(ERROR) << "GetCurItemID for: " << MAC <<" error:" << e.what();
 	}
     return 0;
 }
@@ -225,7 +225,7 @@ bool MDBManager::InsertItem(nlohmann::json newitem){
     stmnt->setString(6, newitem["test_standard"].get<std::string>());
     stmnt->setString(7, newitem["test_start_prog"].get<std::string>());
     stmnt->setString(8, newitem["test_stop_prog"].get<std::string>());
-    stmnt->setInt(9, newitem["test_select"].get<bool>());
+    stmnt->setBoolean(9, newitem["test_select"].get<bool>());
     stmnt->executeQuery();
     return true;
     }
@@ -239,7 +239,7 @@ nlohmann::json MDBManager::GetTestItem(u_int16_t id){
     nlohmann::json testitem;
     try {
     std::unique_ptr<sql::PreparedStatement> stmnt(this->_Conn->prepareStatement(
-                                                      "select * from itemlist where test_id = ?"
+                                                      "select * from itemlist where test_id=?"
                                                       )
                                                   );
 
@@ -255,14 +255,14 @@ nlohmann::json MDBManager::GetTestItem(u_int16_t id){
         {"test_standard", output->getString(6)},
         {"test_start_prog", output->getString(7)},
         {"test_stop_prog", output->getString(8)},
-        {"test_select", output->getInt(9)},
+        {"test_select", output->getBoolean(9)},
         {"test_index", output->getInt(10)}
     };
 
     return testitem;
     }
     catch (sql::SQLException &e) {
-        LOG(ERROR) << "InsertList failed: " << e.what();
+        LOG(ERROR) << "GetTestItem failed: " << e.what();
         return testitem;
     }
 }
@@ -337,6 +337,7 @@ std::vector<IDINT> MDBManager::GetIDList(){
         }
     } catch (sql::SQLException &e) {
         LOG(ERROR) << "GetIDList failed: " << e.what();
+        return idlist;
     }
     return idlist;
 }

@@ -55,7 +55,8 @@ HEADERS += \
         $$PWD/src/config.h \
         $$PWD/src/mdbmanager.h \
         $$PWD/src/rwlock.h \
-        $$PWD/src/testcontrol.h \ \
+        $$PWD/src/testcontrol.h \ \ \
+    src/format.h
 
 
 SOURCES += \
@@ -65,4 +66,5 @@ SOURCES += \
         $$PWD/src/config.cpp \
         $$PWD/src/mdbmanager.cpp \
         $$PWD/src/rwlock.cpp \
-        $$PWD/src/testcontrol.cpp
+        $$PWD/src/testcontrol.cpp \
+    src/format.cpp

@@ -12,12 +12,11 @@ MDBManager *MDBManager::Instance()
 
 bool MDBManager::InitDB(){
     bool ret=false;
-    if (this->TestListChk() && this->ResultListChk()){ret = true;}
-    else{ret = false;}
+    ret = this->ResultListChk();
     return ret;
 }
 
-bool MDBManager::TestListChk(){
+bool MDBManager::ResetItemList(){
     bool ret = false;
     try {
         std::unique_ptr<sql::Statement> stmnt;
@@ -30,14 +29,19 @@ bool MDBManager::TestListChk(){
 }
 
 bool MDBManager::ResultListChk(){
-    this->_ResultTable = "result"+TestControl::Instance()->GetSystime();
+    LOG(INFO) << "Start checking db result list";
     try {
-        std::unique_ptr<sql::PreparedStatement> stmnt(this->_Conn->prepareStatement(
-                                                          "create table ? (mac_addr varchar, test_id int, test_result boolean, test_status boolean)"
-                                                          )
-                                                      );
-        stmnt->setString(1, this->_ResultTable);
-        stmnt->executeQuery();
+        std::unique_ptr<sql::Statement> crtmptbl(this->_Conn->createStatement());
+        crtmptbl->executeQuery("drop table if exists tmpResult");
+    } catch (sql::SQLException &e) {
+        LOG(ERROR) << "Removing table Error: " << e.what();
+        return false;
+    }
+    try {
+        LOG(INFO) << "Create new table for testing";
+        std::unique_ptr<sql::Statement> crtmptbl(this->_Conn->createStatement());
+        crtmptbl->executeQuery("create table tmpResult (mac_addr varchar(20), test_id int, test_result boolean, test_status boolean)");
+        LOG(INFO) <<"New result table created";
         return true;
     } catch (sql::SQLException &e) {
         LOG(ERROR) << "InitResultList Error: " << e.what();
@@ -56,7 +60,7 @@ bool MDBManager::SetTestList(std::vector<IDINT> config){
                       );
         u_int index = 0;
         while (index < config.size()){
-            stmnt->setInt(2, config[index]);
+            stmnt->setUInt(2, config[index]);
             stmnt->setUInt(1, ++index);
             stmnt->executeQuery();
         }
@@ -98,7 +102,6 @@ nlohmann::json MDBManager::GetAllTest()
 }
 
 
-
 nlohmann::json MDBManager::GetTestList(){
     nlohmann::json testlist;
     try {
@@ -116,18 +119,32 @@ nlohmann::json MDBManager::GetTestList(){
     return testlist;
 }
 
-
+bool MDBManager::NewResult(std::string MAC, IDINT id){
+    try {
+        std::unique_ptr<sql::PreparedStatement>
+                stmnt(this->_Conn->prepareStatement(
+                          "insert into tmpResult (mac_addr, test_id, test_status, test_result) values(?, ?, 0, False)"
+                          )
+                      );
+        stmnt->setString(1, MAC);
+        stmnt->setUInt(2, id);
+        stmnt->executeQuery();
+        return true;
+    } catch (sql::SQLException &e) {
+        LOG(ERROR) << "GetCurItemID for: " << MAC <<" error:" << e.what();
+    }
+    return false;
+}
 
 IDINT MDBManager::GetCurItemId(std::string MAC)
 {
 	try {
         std::unique_ptr<sql::PreparedStatement>
                 stmnt(this->_Conn->prepareStatement(
-                          "select test_id, test_status from ? where mac_addr=?"
+                          "select test_id, test_status from result where mac_addr=?"
                           )
                       );
-        stmnt->setString(1, this->_ResultTable);
-        stmnt->setString(2, MAC);
+        stmnt->setString(1, MAC);
         sql::ResultSet *output = stmnt->executeQuery();
         IDINT curid = this->GetIDList().front();
         while(output->next()){
@@ -167,24 +184,23 @@ bool MDBManager::SetStatus(IDINT id, std::string MAC, u_int8_t status){
 
 
 bool MDBManager::SetItemResult(IDINT id, std::string MAC, bool result){
-    bool ret=false;
     try {
     std::unique_ptr<sql::PreparedStatement>
             stmnt(this->_Conn->prepareStatement(
-                      "update ? set test_resutl=? where test_id=? mac_addr=?"
+                      "update tmpResult set test_result=? where test_id=? and mac_addr=?"
                       )
                   );
-    stmnt->setString(1, this->_ResultTable);
-    stmnt->setBoolean(2, result);
-    stmnt->setUInt(3, id);
-    stmnt->setString(4, MAC);
+    stmnt->setBoolean(1, result);
+    stmnt->setUInt(2, id);
+    stmnt->setString(3, MAC);
     stmnt->executeQuery();
-    return ret=true;
+    return true;
     }
     catch (sql::SQLException &e) {
     LOG(ERROR) << "SetItemResult failed in test id: " << id << "from: " << MAC << e.what();
-    return ret=false;
+    return false;
     }
+
 }
 
 
@@ -235,7 +251,7 @@ bool MDBManager::InsertItem(nlohmann::json newitem){
     }
 }
 
-nlohmann::json MDBManager::GetTestItem(u_int16_t id){
+nlohmann::json MDBManager::GetTestItem(IDINT id){
     nlohmann::json testitem;
     try {
     std::unique_ptr<sql::PreparedStatement> stmnt(this->_Conn->prepareStatement(
@@ -243,7 +259,7 @@ nlohmann::json MDBManager::GetTestItem(u_int16_t id){
                                                       )
                                                   );
 
-    stmnt->setInt(1, id);
+    stmnt->setUInt(1, id);
     sql::ResultSet *output = stmnt->executeQuery();
     output->next();
     testitem = {
@@ -306,7 +322,7 @@ MDBManager::MDBManager()
         sql::Properties properties({{"user", "admin"}, {"password", "password"}});
         this->_Conn = std::unique_ptr<sql::Connection>(driver->connect(url, properties));
 
-    } catch(sql::SQLException e) {
+    } catch(sql::SQLException &e) {
         LOG(ERROR) << "connect to mariadb server failed!" << e.what();
     }
 }
@@ -332,7 +348,7 @@ std::vector<IDINT> MDBManager::GetIDList(){
                       );
         sql::ResultSet *output = stmnt->executeQuery();
         while(output->next()){
-            u_int16_t id = output->getUInt(1);
+            IDINT id = output->getUInt(1);
             idlist.push_back(id);
         }
     } catch (sql::SQLException &e) {
@@ -353,7 +369,7 @@ std::string MDBManager::GetItemCMD(IDINT id)
                           "select test_start_prog from itemlist where test_id=?"
                           )
                       );
-        stmnt->setInt(1, id);
+        stmnt->setUInt(1, id);
         sql::ResultSet *output = stmnt->executeQuery();
         ret = output->getString(1);
         return ret;
@@ -376,7 +392,7 @@ u_int8_t MDBManager::GetStatus(IDINT id, std::string MAC)
                       );
         stmnt->setString(1, this->_ResultTable);
         stmnt->setString(2, MAC);
-        stmnt->setInt(3, id);
+        stmnt->setUInt(3, id);
         sql::ResultSet *output = stmnt->executeQuery();
         bool status = output->getUInt(1);
         return status;

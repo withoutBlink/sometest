@@ -6,6 +6,7 @@
 #include <chrono>
 #include <ctime>
 #include <thread>
+#include <algorithm>
 
 #include "nlohmann/json.hpp"
 #include "fmt/format.h"
@@ -14,6 +15,7 @@
 #include "src/wssroute.h"
 #include "src/config.h"
 #include "src/mdbmanager.h"
+#include "format.h"
 
 #ifdef __cplusplus
 extern "C"  {
@@ -61,12 +63,12 @@ private:
 class TargetDev
 {
 public:
-
     std::string GetMac();
     std::string GetIP();
     std::vector<TestItem> GetItemlist();
     std::vector<TestItem>::iterator GetCuritem();
     IDINT GetCuritemID();
+    void UpdateDB();
 
     std::vector<TestItem> GetErrlist();
 
@@ -96,9 +98,9 @@ public:
     bool SetStarted(std::string ipaddr, nlohmann::json content);// set test status 1
     void Stop(std::string ipaddr);// stop specific machine test process
     float Status(std::string ipaddr);// check test complete ratio
-    nlohmann::json ItemList(std::string ipaddr);
+    nlohmann::json ItemList();
     nlohmann::json ItemResults(std::string ipaddr);// get specific machine test result from database
-    bool SetItemResult(std::string ipaddr, const nlohmann::json& msg);
+    bool SetItemResult(std::string ipaddr, const nlohmann::json content);
     bool Reload();
 
 

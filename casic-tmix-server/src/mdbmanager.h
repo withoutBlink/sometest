@@ -5,7 +5,7 @@
 #include "utils/softwareabout.h"
 #include "easylog/easylogging++.h"
 #include "testcontrol.h"
-
+#include "format.h"
 
 #include <vector>
 #include <mutex>
@@ -23,7 +23,7 @@ public:
     // ID for test item primary key
     // MAC for test machine primary key
     bool InitDB();// Init database include itemlist table and result_%startdatetime table
-    bool TestListChk();// Init itemlist table
+    bool ResetItemList();// Init itemlist table
     bool ResultListChk();// create new result table in database include selected test and sort by index
     bool SetTestList(std::vector<IDINT> config);// config is test id array
 
@@ -35,6 +35,7 @@ public:
     std::vector<IDINT> GetIDList();// sort itemlist table by test_index, return sorted ids
 
     // results
+    bool NewResult(std::string MAC, IDINT id);
     IDINT GetCurItemId(std::string MAC);// which test item status is 2
     bool SetStatus(IDINT id, std::string MAC, u_int8_t status);// 0: not tested, 1: tested, 2: testing, 3: error
     bool SetItemResult(IDINT id, std::string MAC, bool result);// 0: not pass, 1: pass

@@ -135,6 +135,16 @@ IDINT TargetDev::GetCuritemID(){
     return curid;
 }
 
+void TargetDev::UpdateDB(){
+    this->_Lock.LockR();
+    for (TestItem item : this->_ItemList){
+        this->GetMac();
+        item.GetTestID();
+        item.GetStatus();
+        item.GetResult();
+    }
+}
+
 std::vector<TestItem> TargetDev::GetErrlist(){
     this->_Lock.LockR();
     std::vector<TestItem> errlist = this->_ErrItemList;
@@ -146,7 +156,7 @@ TargetDev::TargetDev(std::string mac, std::string ipaddr)
     :_MAC(mac),_IP(ipaddr){
     LOG(INFO) << mac <<" Ready to init itemlist";
     this->_ItemList = this->InitItemlist();
-    LOG(INFO) << this->_ItemList.front().GetTestID();
+    this->UpdateDB();// upload local dev info to db
     // CurItem is not set during initiation;
     std::vector<TestItem>::iterator curitem;
     IDINT curid = MDBManager::Instance()->GetCurItemId(mac);
@@ -156,6 +166,10 @@ TargetDev::TargetDev(std::string mac, std::string ipaddr)
             break;
         }
     }
+    std::vector<IDINT> idlist = MDBManager::Instance()->GetIDList();
+        for (IDINT id : idlist){
+            MDBManager::Instance()->NewResult(this->GetMac(), id);
+        }
 }
 
 std::vector<TestItem> TargetDev::InitItemlist(){
@@ -173,7 +187,6 @@ std::vector<TestItem> TargetDev::InitItemlist(){
         LOG(ERROR) << "load id list failed" << e.what();
         return retlist;
     }
-
 }
 
 
@@ -198,51 +211,52 @@ bool TestControl::Reload(){ return false; }
 
 bool TestControl::Prepare(std::string ipaddr, nlohmann::json content)
 {
-   LOG(INFO) << "Starting preparation for: " << ipaddr <<":" << content["MAC"];
+   // check if client is ready
    if (content.contains("MAC") && !content["MAC"].is_null()){
        LOG(INFO) << ipaddr << ": Ready";
-       try {
-           TargetDev * dev = new TargetDev(content["MAC"], ipaddr);
-           this->_DevMap[ipaddr] = dev;// add ready device to device map
-       } catch (std::exception &e) {
-           LOG(ERROR) << e.what();
-       }
-       LOG(INFO) << ipaddr <<" Add to TargetDEV list";
+       TargetDev* dev = new TargetDev(content["MAC"], ipaddr);
+       this->_DevMap[ipaddr] = dev;// add ready device to device map
+       LOG(INFO) << ipaddr <<" Add to TargetDEV list done";
+       return true;
    }
    else {
-       LOG(ERROR) << "CheckReady Fault";
+       LOG(ERROR) << "Client device info not correct";
+       LOG(ERROR) << "Check Ready failed from: " << ipaddr;
+       return false;
    }
-   if(this->CheckReady(content, ipaddr)){LOG(INFO) << "Ready to start from: " << ipaddr;return true;}//check if client is ready
-   // check if db is ready
-   LOG(ERROR) << "Check Ready failed from: " << ipaddr;
-   return false;
 }
 
 bool TestControl::isFresh(std::string ipaddr){
-    TargetDev* targetdev = this->_DevMap[ipaddr];
-    IDINT curid = targetdev->GetCuritemID();
-    IDINT firstid = this->_DevMap[ipaddr]->GetItemlist().front().GetTestID();
-    if (curid == firstid){LOG(INFO) << "Fresh start from: " << ipaddr;return true;}
-    else {return false;}
+    LOG(INFO) << "Check if "<< ipaddr << "is a fresh start";
+    bool ret = true;
+    if (_DevMap.find(ipaddr) == _DevMap.end()){
+        LOG(INFO) << "Fresh start from: " << ipaddr;
+    }
+    else if (_DevMap[ipaddr]->GetCuritemID() ==_DevMap[ipaddr]->GetItemlist().front().GetTestID()){
+        LOG(INFO) << "Fresh start from: " << ipaddr;
+    }
+    else{
+        ret = false;
+    }
+    return ret;
 }
 
 nlohmann::json TestControl::Start(std::string ipaddr){
     nlohmann::json json_ret;
-    if (/* DISABLES CODE */ (true)){//isFresh(ipaddr)){
+    if (isFresh(ipaddr)){
         try {
             json_ret = FreshStart(ipaddr);
         } catch (std::exception &e) {
             LOG(ERROR) << "Start fresh test from" << ipaddr << "failed" <<e.what();
         }
-
     }
     else {
         try {
+            LOG(INFO) << ipaddr <<"Try to resume test";
             json_ret = Resume(ipaddr);
         } catch (std::exception &e) {
             LOG(ERROR) << "Resume test from" << ipaddr << "failed" <<e.what();
         }
-
     }
     return json_ret;
 }
@@ -289,7 +303,7 @@ bool TestControl::SetStarted(std::string ipaddr, nlohmann::json content){
     return true;
 }
 
-void TestControl::Stop(std::string ipaddr){}
+// void TestControl::Stop(std::string ipaddr){}
 
 nlohmann::json TestControl::ItemResults(std::string ipaddr)
 {
@@ -304,15 +318,18 @@ nlohmann::json TestControl::ItemResults(std::string ipaddr)
     return results;
 }
 
-bool TestControl::SetItemResult(std::string ipaddr, const nlohmann::json& msg){
+bool TestControl::SetItemResult(std::string ipaddr, const nlohmann::json content){
     bool ret = false;
-    if (!msg["Content"]["Result"].is_null()){
-        if (msg["Content"]["Result"]["test_id"].is_number() && msg["Content"]["Result"]["test_result"].is_boolean()){
-            IDINT id = msg["Content"]["Result"]["test_id"];
-            bool result = msg["Content"]["Result"]["test_result"];
+    LOG(INFO) << "SetItemResult: " << ipaddr;
+    if (content.contains("test_id") && content.contains("test_result")){
+        if (content["test_id"].is_number() && content["test_result"].is_boolean()){
+            LOG(INFO) << "Result from: " << ipaddr << " seems right";
+            IDINT id = content["test_id"];
+            bool result = content["test_result"];
             (*this->_DevMap[ipaddr]->GetCuritem()).SetResult(result);
-            // MDBManager::Instance()->SetItemResult(id, this->_DevMap[ipaddr].GetMac(), result);
-            ret = true;
+            if (MDBManager::Instance()->SetItemResult(id, this->_DevMap[ipaddr]->GetMac(), result)){
+                ret = true;
+            }
         }
     }
     return ret;
@@ -323,19 +340,17 @@ TestControl::TestControl(){}
 TestControl::~TestControl(){}
 
 std::string TestControl::GetSystime(){
+    LOG(INFO) << "Getting system time";
     auto now = std::chrono::system_clock::now();
     time_t curtime = std::chrono::system_clock::to_time_t(now);
-    return std::ctime(&curtime);
+    std::string timestr = std::ctime(&curtime);
+    return timestr;
 }
 
-bool TestControl::CheckReady(nlohmann::json content, std::string ipaddr){
 
-}
-
-nlohmann::json TestControl::ItemList(std::string ipaddr)
+nlohmann::json TestControl::ItemList()
 {
     this->_Lock.LockR();
-    std::string MAC = this->_DevMap[ipaddr]->GetMac();
     nlohmann::json tmpjson = MDBManager::Instance()->GetTestList();
     this->_Lock.UNLock();
     return tmpjson;

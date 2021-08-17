@@ -24,10 +24,10 @@ void WSSRoute::SendMsg(std::string& ipaddr, const std::string& msg){
     this->SendMsg(this->GetConnection(ipaddr), msg);
 }
 
-void WSSRoute::BroadCast(const std::string& msg){
+void WSSRoute::BroadCast(std::string method, std::string content){
     nlohmann::json message = {
-        {"Method","BroadCast"},
-        {"Content",msg}};
+        {"Method",method},
+        {"Content",content}};
     for (auto map : this->_ItemConnection){
         this->SendMsg(map.second, message);
     }
@@ -71,7 +71,7 @@ std::shared_ptr<WsServer::Connection> WSSRoute::GetConnection(const std::string&
         return this->_ItemConnection[addr];
 }
 
-std::shared_ptr<WsServer::Connection> WSSRoute::GetConnection(const std::uint16_t& id){};
+// std::shared_ptr<WsServer::Connection> WSSRoute::GetConnection(const std::uint16_t& id){};
 
 void WSSRoute::SendMsg(std::shared_ptr<WsServer::Connection> connection, const std::string &msg)
 {
@@ -176,17 +176,20 @@ void WSSRoute::onMessage(std::shared_ptr<WsServer::Connection> connection,
 		nlohmann::json request = nlohmann::json::parse(msg);
 		if (request.is_null() || !request.is_object()
 				|| !request.contains("Method") || !request["Method"].is_string()
-				|| !request.contains("Content") || request["Content"].is_null()
+                || !request.contains("Content")  || request["Content"].is_null()
 				) {
             throw std::invalid_argument("Illegal message.");
         }
         if (from == "/tmix/items"){
-            _This->onItemMesg(request, connection);// add thread!!!
-            
+            auto funstaff = [](const nlohmann::json request, const std::shared_ptr<WsServer::Connection> connection)
+            {
+                _This->onItemMesg(request, connection);
+            };// add thread!!!
+            std::thread itemsthread(funstaff, request, connection);
+            itemsthread.detach();
         }
         else if (from == "/tmix/ui"){
-            _This->onUIMesg(request, connection);// add thread!!!
-            
+            _This->onWebMesg(request, connection);// add thread!!!
         }
         else
             LOG(WARNING) << "Illegal path visited by:"
@@ -197,7 +200,7 @@ void WSSRoute::onMessage(std::shared_ptr<WsServer::Connection> connection,
 	}
 }
 
-void WSSRoute::onUIMesg(const nlohmann::json request, std::shared_ptr<WsServer::Connection> connection){
+void WSSRoute::onWebMesg(const nlohmann::json request, std::shared_ptr<WsServer::Connection> connection){
     std::lock_guard<std::mutex>(this->_ConnectionMutex);
     std::string method = request["Method"];
     nlohmann::json content;
@@ -219,34 +222,38 @@ void WSSRoute::onItemMesg(const nlohmann::json request, std::shared_ptr<WsServer
     std::string method = request["Method"];
     nlohmann::json content;
     std::string ipaddr = connection->remote_endpoint_address();
-    LOG(INFO) << "Start a new thread for " << ipaddr;
-    if (request.is_null()){
-        throw std::invalid_argument("Content not exists");
-    }
-    if (request["Content"].is_string() ){
+    LOG(INFO) << "Start a new thread for test device :" << ipaddr;
+
+    if (request["Content"].is_string()){
         std::string content_str = request["Content"];
-        content = nlohmann::json::parse(content_str);
-    }
-    else if (request["Content"].is_object()){
+        if (content_str.length()>0){
+            content = nlohmann::json::parse(content_str);
+        }
+        else
+            content = {};
+    } else if (request["Content"].is_object()){
         content = request["Content"];
     }
-    else
-        throw std::invalid_argument("Content illegal");
 
     if(method == "TestReady"){ // decide the test machine is ready or not after recieve
-        if (TestControl::Instance()->Prepare(ipaddr, content)){SendMsg(connection, "asdf" /*TestControl::Instance()->Start(ipaddr)*/);}
-        else {this->ErrorRespond("client not ready", connection);}
+        if (TestControl::Instance()->Prepare(ipaddr, content)){SendMsg(connection, TestControl::Instance()->Start(ipaddr).dump());}
+        else {this->ErrorRespond("Client not ready", connection);}
     } else if (method == "Started"){
         if (TestControl::Instance()->SetStarted(ipaddr,content)){}
         else {ErrorRespond("Illegal testitem or Itemlist not ready", connection);}
     } else if (method == "RelaodTest"){
 
     } else if (method == "TimeSync"){
-        _This->SendMsg(connection, TestControl::Instance()->GetSystime());
+        LOG(INFO) << "System time: " <<TestControl::Instance()->GetSystime();
+        nlohmann::json tmp_json = {
+            {"Method", "TimeSync"},
+            {"Content", TestControl::Instance()->GetSystime()}
+        };
+        _This->SendMsg(connection, tmp_json.dump());
     } else if (method == "BroadCast"){
-        this->BroadCast(content);
-    } else if (method == "SetItemResult"){
-        if(!TestControl::Instance()->SetItemResult(ipaddr, content)){this->ErrorRespond("WrongResultContent",connection);}
+        this->BroadCast(content["Method"], content["Content"]);
+    } else if (method == "Result"){
+        if(TestControl::Instance()->SetItemResult(ipaddr, content)){LOG(INFO) << "Upload result success";}
         else {this->ErrorRespond("illegal result content", connection);}
     } else if (method == "ForTest"){
         content = request["Content"];

@@ -16,7 +16,7 @@ public:
     static WSSRoute *Instance();
 	void Init(WsServer::Endpoint& ep);
     void SendMsg(std::string& ipaddr, const std::string& msg);
-    void BroadCast(const std::string& msg);
+    void BroadCast(std::string method, std::string content);
     // void InitUi();
     // void InitItem();
 
@@ -38,7 +38,7 @@ private:
     static void onMessage(std::shared_ptr<WsServer::Connection> connection,
                   std::shared_ptr<WsServer::Message> message);
     void onItemMesg(const nlohmann::json request, std::shared_ptr<WsServer::Connection> connection);
-    void onUIMesg(const nlohmann::json request, std::shared_ptr<WsServer::Connection> connection);
+    void onWebMesg(const nlohmann::json request, std::shared_ptr<WsServer::Connection> connection);
 
 private:
     static WSSRoute *_This;

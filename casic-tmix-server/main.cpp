@@ -32,6 +32,12 @@ int main()
 //	MonitorTemp monitortemp;
 //	monitortemp.Start();
 
+    if (!MDBManager::Instance()->InitDB()){
+        LOG(ERROR) << "DB initiation error";
+        return 1;
+    }
+
+
 	WsServer service;
     service.config.port = Config::Instance()->GetServicePort();
 	service.config.thread_pool_size = std::thread::hardware_concurrency();

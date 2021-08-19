@@ -38,7 +38,7 @@ public:
     size_t GetStatus();
     void SetStarted();
     void SetResult(bool result);
-    nlohmann::json GetResult();
+    bool GetResult();
     IDINT GetTestID();
     std::string GetTestKey();
     std::string GetTestCMD();
@@ -57,7 +57,7 @@ private:
     bool _test_select = true;// some how useless, because if some TestItem instance has been created which means it had been selected already.
     bool _Result = false;// pass or not pass
     bool _Repaired = false;// variable only exists in mem not db
-    size_t _Status;// ready=0, running=1, finished=2, error=3, vairable
+    size_t _Status = 0;// ready=0, running=1, finished=2, error=3, vairable
 };
 
 class TargetDev
@@ -67,8 +67,12 @@ public:
     std::string GetIP();
     std::vector<TestItem> GetItemlist();
     std::vector<TestItem>::iterator GetCuritem();
+    void SetNextitem();
     IDINT GetCuritemID();
+
+    void UpdateDB_ALL();// update items already exists
     void UpdateDB();
+    void UpdateDB(IDINT id);
 
     std::vector<TestItem> GetErrlist();
 
@@ -100,6 +104,7 @@ public:
     nlohmann::json ItemList();// return a minimal version of test list, used for task distribution
     nlohmann::json ItemResults(std::string ipaddr);// get specific device test result from database
     bool SetItemResult(std::string ipaddr, const nlohmann::json content);// process result uploaded by client
+    void NextTest(std::string ipaddr);
     bool Reload(std::string ipaddr);// reload test process for specific device
 
     //For program testing

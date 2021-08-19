@@ -36,7 +36,7 @@ size_t TestItem::GetStatus(){
 
 void TestItem::SetStarted(){
     this->_Lock.LockW();
-    if ( this->_Status == 0){
+    if (this->_Status == 0){
         this->_Status = 1;
     }
     else if (_Status == 3){
@@ -68,15 +68,15 @@ void TestItem::SetResult(bool result){
     this->_Lock.UNLock();
 }
 
-nlohmann::json TestItem::GetResult(){
+bool TestItem::GetResult(){
     this->_Lock.LockR();
     nlohmann::json json_tmp = {
-        {"test_id", this->_test_id},
+        {"test_status", this->_Status},
         {"test_result", this->_Result},
         {"test_repaired", this->_Repaired}
     };
     this->_Lock.UNLock  ();
-    return json_tmp;
+    return this->_Result;
 }
 
 IDINT TestItem::GetTestID(){
@@ -129,20 +129,44 @@ std::vector<TestItem>::iterator TargetDev::GetCuritem(){
     return curitem;
 }
 
+void TargetDev::SetNextitem(){//DOING
+    this->_Lock.LockW();
+    TestItem tmpitem = *this->_Curitem;
+    if (tmpitem.GetResult() == false){
+        _ErrItemList.push_back(tmpitem);
+    }
+    this->UpdateDB();
+    this->_Curitem++;
+    this->_Lock.UNLock();
+}
+
 IDINT TargetDev::GetCuritemID(){
     auto tmpmid = this->GetCuritem();
     IDINT curid = (*tmpmid).GetTestID();
     return curid;
 }
 
-void TargetDev::UpdateDB(){
+void TargetDev::UpdateDB_ALL(){// TODO update depend on mac-id pair exists
     this->_Lock.LockR();
     for (TestItem item : this->_ItemList){
-        this->GetMac();
-        item.GetTestID();
-        item.GetStatus();
-        item.GetResult();
+        IDINT id = item.GetTestID();
+        size_t status = item.GetStatus();
+        bool result = item.GetResult();
+        MDBManager::Instance()->SetStatus(id,this->GetMac(),status);
+        MDBManager::Instance()->SetItemResult(id,this->GetMac(),result);
     }
+    this->_Lock.UNLock();
+}
+
+void TargetDev::UpdateDB(){
+    this->_Lock.LockR();
+    IDINT id = (*this->_Curitem).GetTestID();
+    bool result = (*this->_Curitem).GetResult();// repair
+    size_t status = (*this->_Curitem).GetStatus();
+    LOG(INFO) << "Upload id: " << id << " Result: " << result << " Status: " << status;
+    MDBManager::Instance()->SetStatus(id,this->_MAC,status);
+    MDBManager::Instance()->SetItemResult(id,this->_MAC,result);
+    this->_Lock.UNLock();
 }
 
 std::vector<TestItem> TargetDev::GetErrlist(){
@@ -156,7 +180,6 @@ TargetDev::TargetDev(std::string mac, std::string ipaddr)
     :_MAC(mac),_IP(ipaddr){
     LOG(INFO) << mac <<" Ready to init itemlist";
     this->_ItemList = this->InitItemlist();
-    this->UpdateDB();// upload local dev info to db
     // CurItem is not set during initiation;
     std::vector<TestItem>::iterator curitem;
     IDINT curid = MDBManager::Instance()->GetCurItemId(mac);
@@ -170,6 +193,7 @@ TargetDev::TargetDev(std::string mac, std::string ipaddr)
         for (IDINT id : idlist){
             MDBManager::Instance()->NewResult(this->GetMac(), id);
         }
+    LOG(INFO) << "Finish upload device: " << mac << " to database";
 }
 
 std::vector<TestItem> TargetDev::InitItemlist(){
@@ -207,7 +231,6 @@ void TestControl::Destory()
 	}
 }
 
-bool TestControl::Reload(){ return false; }
 
 bool TestControl::Prepare(std::string ipaddr, nlohmann::json content)
 {
@@ -297,10 +320,21 @@ nlohmann::json TestControl::Resume(std::string ipaddr){
 }
 
 bool TestControl::SetStarted(std::string ipaddr, nlohmann::json content){
-    if (content["test_id"].is_null()){return false;}
-    IDINT testid = content["test_id"];
-    MDBManager::Instance()->SetStatus(testid, this->_DevMap[ipaddr]->GetMac(),2);
-    return true;
+    if (!content.contains("test_id")||content["test_id"].is_null()
+            ||!content["test_id"].is_number()){return false;}
+    try {
+        IDINT testid = content["test_id"];
+        if (testid == this->_DevMap[ipaddr]->GetCuritemID()){
+            (*this->_DevMap[ipaddr]->GetCuritem()).SetStarted();
+            LOG(INFO) << ipaddr <<": Set curitem started";
+            return true;
+        }
+        else
+            return false;
+    } catch (nlohmann::detail::type_error &e) {
+        LOG(ERROR) << e.what();
+        return false;
+    }
 }
 
 // void TestControl::Stop(std::string ipaddr){}
@@ -323,16 +357,26 @@ bool TestControl::SetItemResult(std::string ipaddr, const nlohmann::json content
     LOG(INFO) << "SetItemResult: " << ipaddr;
     if (content.contains("test_id") && content.contains("test_result")){
         if (content["test_id"].is_number() && content["test_result"].is_boolean()){
-            LOG(INFO) << "Result from: " << ipaddr << " seems right";
+            LOG(INFO) << "Result from: " << ipaddr << " format right";
             IDINT id = content["test_id"];
             bool result = content["test_result"];
-            (*this->_DevMap[ipaddr]->GetCuritem()).SetResult(result);
-            if (MDBManager::Instance()->SetItemResult(id, this->_DevMap[ipaddr]->GetMac(), result)){
+            if (id == this->_DevMap[ipaddr]->GetCuritemID()){
+                LOG(INFO) << "Result from: " << ipaddr << " content right";
+                (*this->_DevMap[ipaddr]->GetCuritem()).SetResult(result);
+                LOG(INFO) << "Result from: " << ipaddr << " Set: "<< result;
+                this->_DevMap[ipaddr]->UpdateDB();
+                LOG(INFO) << "Upload: " << ipaddr << " result to database";
                 ret = true;
             }
         }
     }
     return ret;
+}
+
+void TestControl::NextTest(std::string ipaddr){
+    this->_Lock.LockW();
+    this->_DevMap[ipaddr]->SetNextitem();
+    this->_Lock.UNLock();
 }
 
 TestControl::TestControl(){}

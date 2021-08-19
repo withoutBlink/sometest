@@ -136,6 +136,8 @@ bool MDBManager::NewResult(std::string MAC, IDINT id){
     return false;
 }
 
+
+
 IDINT MDBManager::GetCurItemId(std::string MAC)
 {
 	try {
@@ -161,18 +163,17 @@ IDINT MDBManager::GetCurItemId(std::string MAC)
 
 
 
-bool MDBManager::SetStatus(IDINT id, std::string MAC, u_int8_t status){
+bool MDBManager::SetStatus(IDINT id, std::string MAC, size_t status){
     bool ret=false;
     try {
     std::unique_ptr<sql::PreparedStatement>
             stmnt(this->_Conn->prepareStatement(
-                      "update ? set test_status=? where mac_addr=? and test_id=?;"
+                      "update tmpResult set test_status=? where mac_addr=? and test_id=?;"
                       )
                   );
-    stmnt->setString(1, this->_ResultTable);
-    stmnt->setBoolean(2, status);
-    stmnt->setString(3, MAC);
-    stmnt->setUInt(4, id);
+    stmnt->setUInt64(1, status);
+    stmnt->setString(2, MAC);
+    stmnt->setUInt(3, id);
     stmnt->executeQuery();
     return ret=true;
     } catch (sql::SQLException &e) {
@@ -210,12 +211,11 @@ bool MDBManager::GetItemResult(IDINT id, std::string MAC){
     try {
     std::unique_ptr<sql::PreparedStatement>
             stmnt(this->_Conn->prepareStatement(
-                      "select test_result from ? where test_id=? and mac_addr=?"
+                      "select test_result from tmpResult where test_id=? and mac_addr=?"
                       )
                   );
-    stmnt->setString(1, this->_ResultTable);
-    stmnt->setUInt(2, id);
-    stmnt->setString(3, MAC);
+    stmnt->setUInt(1, id);
+    stmnt->setString(2, MAC);
     sql::ResultSet *output = stmnt->executeQuery();
     return ret = output->getBoolean(1);
     }

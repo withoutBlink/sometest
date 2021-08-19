@@ -37,7 +37,7 @@ public:
     // results
     bool NewResult(std::string MAC, IDINT id);
     IDINT GetCurItemId(std::string MAC);// which test item status is 2
-    bool SetStatus(IDINT id, std::string MAC, u_int8_t status);// 0: not tested, 1: tested, 2: testing, 3: error
+    bool SetStatus(IDINT id, std::string MAC, size_t status);// 0: not tested, 1: tested, 2: testing, 3: error
     bool SetItemResult(IDINT id, std::string MAC, bool result);// 0: not pass, 1: pass
     bool GetItemResult(IDINT id, std::string MAC);
     bool SetServerConf(nlohmann::json); // TODO

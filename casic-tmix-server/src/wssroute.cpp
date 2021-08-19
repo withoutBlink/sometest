@@ -244,7 +244,6 @@ void WSSRoute::onItemMesg(const nlohmann::json request, std::shared_ptr<WsServer
     } else if (method == "RelaodTest"){
 
     } else if (method == "TimeSync"){
-        LOG(INFO) << "System time: " <<TestControl::Instance()->GetSystime();
         nlohmann::json tmp_json = {
             {"Method", "TimeSync"},
             {"Content", TestControl::Instance()->GetSystime()}
@@ -253,11 +252,13 @@ void WSSRoute::onItemMesg(const nlohmann::json request, std::shared_ptr<WsServer
     } else if (method == "BroadCast"){
         this->BroadCast(content["Method"], content["Content"]);
     } else if (method == "Result"){
-        if(TestControl::Instance()->SetItemResult(ipaddr, content)){LOG(INFO) << "Upload result success";}
+        if(TestControl::Instance()->SetItemResult(ipaddr, content)){
+            LOG(INFO) << "Upload result success";
+            TestControl::Instance()->NextTest(ipaddr);
+        }
         else {this->ErrorRespond("illegal result content", connection);}
     } else if (method == "ForTest"){
-        content = request["Content"];
-        LOG(INFO) << (content["MAC"]);
+
     } else{
         WSSRoute::Instance()->SendMsg(connection, "Illegal Message");
         LOG(WARNING) << "Unrecongnized method:"

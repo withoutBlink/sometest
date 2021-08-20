@@ -104,7 +104,7 @@ public:
     nlohmann::json ItemList();// return a minimal version of test list, used for task distribution
     nlohmann::json ItemResults(std::string ipaddr);// get specific device test result from database
     bool SetItemResult(std::string ipaddr, const nlohmann::json content);// process result uploaded by client
-    void NextTest(std::string ipaddr);
+    nlohmann::json NextTest(std::string ipaddr);
     bool Reload(std::string ipaddr);// reload test process for specific device
 
     //For program testing

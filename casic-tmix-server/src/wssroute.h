@@ -16,7 +16,8 @@ public:
     static WSSRoute *Instance();
 	void Init(WsServer::Endpoint& ep);
     void SendMsg(std::string& ipaddr, const std::string& msg);
-    void BroadCast(std::string method, std::string content);
+    void BroadCast(std::string method, std::string content_str);
+    void BroadCast(std::string method, nlohmann::json content);
     // void InitUi();
     // void InitItem();
 

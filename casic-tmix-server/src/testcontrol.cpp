@@ -373,10 +373,17 @@ bool TestControl::SetItemResult(std::string ipaddr, const nlohmann::json content
     return ret;
 }
 
-void TestControl::NextTest(std::string ipaddr){
+nlohmann::json TestControl::NextTest(std::string ipaddr){
     this->_Lock.LockW();
     this->_DevMap[ipaddr]->SetNextitem();
     this->_Lock.UNLock();
+    IDINT id = this->_DevMap[ipaddr]->GetCuritemID();
+    std::string method = "NextStart";
+    nlohmann::json tmp_json = {
+        {"Method",method},
+        {"Content",{"test_id",id}}
+    };
+    return tmp_json;
 }
 
 TestControl::TestControl(){}

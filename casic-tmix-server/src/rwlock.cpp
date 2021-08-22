@@ -1,7 +1,5 @@
 #include "rwlock.h"
 
-#include "easylog/easylogging++.h"
-
 RWLock::RWLock()
 {
 	if (pthread_rwlock_init(&this->_Lock, nullptr)) {

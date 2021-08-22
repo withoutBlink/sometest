@@ -51,18 +51,20 @@ HEADERS += \
         $$PROJECTPATH/common/easylog/easylogging++.h \
         $$PROJECTPATH/common/utils/softwareabout.h \
         $$PROJECTPATH/common/utils/base64.hpp \
-        $$PWD/src/wssrvroute.h \
+        $$PWD/src/wssroute.h \
         $$PWD/src/config.h \
         $$PWD/src/mdbmanager.h \
         $$PWD/src/rwlock.h \
-        $$PWD/src/testcontrol.h \ \
+        $$PWD/src/testcontrol.h \ \ \
+    src/format.h
 
 
 SOURCES += \
         $$PROJECTPATH/common/easylog/easylogging++.cc \
-        $$PWD/src/wssrvroute.cpp \
+        $$PWD/src/wssroute.cpp \
 	$$PWD/main.cpp \
         $$PWD/src/config.cpp \
         $$PWD/src/mdbmanager.cpp \
         $$PWD/src/rwlock.cpp \
-        $$PWD/src/testcontrol.cpp
+        $$PWD/src/testcontrol.cpp \
+    src/format.cpp

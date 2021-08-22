@@ -1,8 +1,10 @@
 *.md
 casic-tmix-cases*
-casic-tmix-client*
-build/*
+*casic-tmix-cases*
+*build*
+build*
 *.tar.gz
 *.sqlite3
 *.txt
 *.tar.gz
+.git.token

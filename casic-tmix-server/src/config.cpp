@@ -1,12 +1,5 @@
 #include "config.h"
 
-#include "inifile/inifile.h"
-#include "easylog/easylogging++.h"
-
-#include "src/mdbmanager.h"
-#include "utils/softwareabout.h"
-
-
 Config *Config::_This = nullptr;
 
 Config *Config::Instance()
@@ -16,6 +9,11 @@ Config *Config::Instance()
 	}
 	return _This;
 }
+
+int Config::GetServicePort(){
+    return this->PortService;
+}
+
 
 void Config::Destory()
 {
@@ -28,9 +26,9 @@ void Config::Destory()
 Config::Config()
 {
 	try {
-		this->parse();
+        this->LoadConf();
 	}  catch (std::exception &e) {
-		LOG(ERROR) << e.what();
+        LOG(ERROR) << "LoadConf Error: " << e.what();
 	}
 }
 
@@ -39,36 +37,15 @@ Config::~Config()
 
 }
 
-void Config::parse()
+void Config::LoadConf()
 {
-	inifile::IniFile inifile;
-	if (inifile.Load(SOFTWARE_PATH_CONFIG)) {
-		throw std::invalid_argument("failed parse config.");
-	}
-
-	if (inifile.HasKey("Service", "ErrIntereupt")) {
-		inifile.GetBoolValue("Service", "ErrIntereupt", &this->Data.ErrIntereupt);
-	}
-	if (inifile.HasKey("Service", "ErrRepetitionCount")) {
-		inifile.GetIntValue("Service", "ErrRepetitionCount", &this->Data.ErrRepetitionCount);
-	}
-	if (inifile.HasKey("Service", "ErrRepetitionTime")) {
-		inifile.GetStringValue("Service", "ErrRepetitionTime", &this->Data.ErrRepetitionTime);
-	}
-	if (inifile.HasKey("Service", "Port")) {
-		inifile.GetIntValue("Service", "Port", &this->Data.PortService);
-	}
-	if (inifile.HasKey("Server", "IP")) {
-		inifile.GetStringValue("Server", "IP", &this->Data.IP);
-	}
-	if (inifile.HasKey("Server", "PortScanServer")) {
-		inifile.GetIntValue("Server", "PortScanServer", &this->Data.PortScanServer);
-	}
-	if (inifile.HasKey("Server", "PortServerHttp")) {
-		inifile.GetIntValue("Server", "PortServerHttp", &this->Data.PortServerHTTP);
-	}
-	if (inifile.HasKey("Server", "ProtServerWs")) {
-		inifile.GetIntValue("Server", "ProtServerWs", &this->Data.PortServerWS);
-	}
+    nlohmann::json serverconf = MDBManager::Instance()->GetServerConf();
+    //this->ServerIP = serverconf["IP"];
+    this->PortService = serverconf["PortService"];
+    //this->ErrIntereupt = serverconf["ErrInterupt"];
+    //this->ErrRepetitionCount = serverconf["ErrRepetitionCount"];
+    //this->PortScanServer = serverconf["PortScanServer"];
+    //this->PortServerHTTP = serverconf["PortServerHttp"];
+    //this->PortServerWS = serverconf["PortServerWs"];
 }
 

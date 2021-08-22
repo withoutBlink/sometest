@@ -6,34 +6,11 @@
 
 #include "src/rwlock.h"
 #include "utils/softwareabout.h"
-
 #include "nlohmann/json.hpp"
 //#include "thread/thread.hpp"
-
-class GlobalData
-{
-public:
-	GlobalData()
-		: PortScanServer(PORT_SCANSRV)
-		, PortServerHTTP(PORT_SERVER_HTTP)
-		, PortServerWS(PORT_SERVER_WS)
-		, PortService(PORT_SERVICE)
-		, ErrIntereupt(true)
-		, ErrRepetitionCount(3)
-		, ErrRepetitionTime("after_current_group"){}
-
-	std::string IP;
-	int PortScanServer;
-	int PortServerHTTP;
-	int PortServerWS;
-	int PortService;
-    bool ErrIntereupt;
-	int ErrRepetitionCount;
-	std::string ErrRepetitionTime;
-};
-
-
-
+#include "easylog/easylogging++.h"
+#include "src/mdbmanager.h"
+#include "src/mdbmanager.h"
 
 
 class Config
@@ -41,17 +18,24 @@ class Config
 public:
 	static Config *Instance();
 	static void Destory();
-
-	GlobalData Data;
+    int GetServicePort();
 
 private:
 	Config();
 	~Config();
+    void LoadConf();
 
-	void parse();
 
 private:
 	static Config *_This;
+    std::string ServerIP;
+    int PortScanServer;
+    int PortServerHTTP;
+    int PortServerWS;
+    int PortService;
+    bool ErrIntereupt;
+    int ErrRepetitionCount;
+
 };
 
 #endif // CONFIG_H

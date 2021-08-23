@@ -7,9 +7,7 @@
 #include "src/rwlock.h"
 #include "utils/softwareabout.h"
 #include "nlohmann/json.hpp"
-//#include "thread/thread.hpp"
 #include "easylog/easylogging++.h"
-#include "src/mdbmanager.h"
 #include "src/mdbmanager.h"
 
 
@@ -19,6 +17,7 @@ public:
 	static Config *Instance();
 	static void Destory();
     int GetServicePort();
+
 
 private:
 	Config();

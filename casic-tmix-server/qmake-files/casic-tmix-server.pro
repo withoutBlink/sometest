@@ -39,7 +39,7 @@ LIBS += \
 
 LIBS += \
         -lcrypto \
-        -lsensors \
+#        -lsensors \
         -lmariadbcpp
 
 

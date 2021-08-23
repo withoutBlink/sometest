@@ -4,7 +4,7 @@
 #include "utils/softwareabout.h"
 #include "nlohmann/json.hpp"
 #include "webserver/server_ws.hpp"
-#include "src/testcontrol.h"
+#include "testcontrol.h"
 #include "easylog/easylogging++.h"
 #include "config.h"
 

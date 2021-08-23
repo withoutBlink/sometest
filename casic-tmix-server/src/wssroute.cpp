@@ -259,7 +259,7 @@ void WSSRoute::onItemMesg(const nlohmann::json request, std::shared_ptr<WsServer
     } else if (method == "Result"){
         if(TestControl::Instance()->SetItemResult(ipaddr, content)){
             nlohmann::json tmp_json = TestControl::Instance()->NextTest(ipaddr);
-            _This->SendMsg(ipaddr,tmp_json.dump())}
+            _This->SendMsg(ipaddr,tmp_json.dump());}
         else {this->ErrorRespond("illegal result content", connection);}
     } else if (method == "StartNext"){
 

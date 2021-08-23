@@ -12,6 +12,12 @@ MDBManager *MDBManager::Instance()
 
 bool MDBManager::InitDB(){
     bool ret=false;
+    auto now = std::chrono::system_clock::now();
+    time_t curtime = std::chrono::system_clock::to_time_t(now);
+    std::string timestr = std::ctime(&curtime);
+    std::replace(timestr.begin(), timestr.end(),' ','_');
+    std::replace(timestr.begin(), timestr.end(),':','_');
+    this->_ResultTable = "Result" + timestr;
     ret = this->ResultListChk();
     return ret;
 }
@@ -32,7 +38,7 @@ bool MDBManager::ResultListChk(){
     LOG(INFO) << "Start checking db result list";
     try {
         std::unique_ptr<sql::Statement> crtmptbl(this->_Conn->createStatement());
-        crtmptbl->executeQuery("drop table if exists tmpResult");
+        crtmptbl->executeQuery("drop table if exists "+this->_ResultTable);
     } catch (sql::SQLException &e) {
         LOG(ERROR) << "Removing table Error: " << e.what();
         return false;
@@ -40,7 +46,7 @@ bool MDBManager::ResultListChk(){
     try {
         LOG(INFO) << "Create new table for testing";
         std::unique_ptr<sql::Statement> crtmptbl(this->_Conn->createStatement());
-        crtmptbl->executeQuery("create table tmpResult (mac_addr varchar(20), test_id int, test_result boolean, test_status boolean)");
+        crtmptbl->executeQuery("create table "+this->_ResultTable+" (mac_addr varchar(20), test_id int, test_result boolean, test_status boolean)");
         LOG(INFO) <<"New result table created";
         return true;
     } catch (sql::SQLException &e) {
@@ -123,7 +129,7 @@ bool MDBManager::NewResult(std::string MAC, IDINT id){
     try {
         std::unique_ptr<sql::PreparedStatement>
                 stmnt(this->_Conn->prepareStatement(
-                          "insert into tmpResult (mac_addr, test_id, test_status, test_result) values(?, ?, 0, False)"
+                          "insert into "+this->_ResultTable+" (mac_addr, test_id, test_status, test_result) values(?, ?, 0, False)"
                           )
                       );
         stmnt->setString(1, MAC);
@@ -168,7 +174,7 @@ bool MDBManager::SetStatus(IDINT id, std::string MAC, size_t status){
     try {
     std::unique_ptr<sql::PreparedStatement>
             stmnt(this->_Conn->prepareStatement(
-                      "update tmpResult set test_status=? where mac_addr=? and test_id=?;"
+                      "update "+this->_ResultTable+" set test_status=? where mac_addr=? and test_id=?;"
                       )
                   );
     stmnt->setUInt64(1, status);
@@ -188,7 +194,7 @@ bool MDBManager::SetItemResult(IDINT id, std::string MAC, bool result){
     try {
     std::unique_ptr<sql::PreparedStatement>
             stmnt(this->_Conn->prepareStatement(
-                      "update tmpResult set test_result=? where test_id=? and mac_addr=?"
+                      "update "+this->_ResultTable+" set test_result=? where test_id=? and mac_addr=?"
                       )
                   );
     stmnt->setBoolean(1, result);
@@ -211,7 +217,7 @@ bool MDBManager::GetItemResult(IDINT id, std::string MAC){
     try {
     std::unique_ptr<sql::PreparedStatement>
             stmnt(this->_Conn->prepareStatement(
-                      "select test_result from tmpResult where test_id=? and mac_addr=?"
+                      "select test_result from "+this->_ResultTable+" where test_id=? and mac_addr=?"
                       )
                   );
     stmnt->setUInt(1, id);

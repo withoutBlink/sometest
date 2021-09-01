@@ -25,6 +25,10 @@ TestItem::TestItem(IDINT id)
     // this->_test_select = iteminfo["test_select"];
     // LOG(INFO) << "Get test selected" ;
     LOG(INFO) << "Finish get test info";
+    this->_test_select = true;// useless or duplicated, because if some TestItem instance has been created which means it had been selected already.
+    this->_test_result = false;// pass or not pass
+    this->_repaired = false;// variable only exists in mem not db
+    this->_test_status = 0;
 }
 
 size_t TestItem::GetStatus(){
@@ -35,7 +39,7 @@ size_t TestItem::GetStatus(){
 }
 
 void TestItem::SetStarted(){
-    this->_Lock.LockW();
+    this->_Lock.TryLockW();
     if (this->_test_status == 0){
         this->_test_status = 1;
     }
@@ -47,7 +51,7 @@ void TestItem::SetStarted(){
 }
 
 void TestItem::SetResult(bool result){
-    this->_Lock.LockW();
+    this->_Lock.TryLockW();
     if(this->_test_status == 1){
         if (result){
             this->_test_result = result;
@@ -92,9 +96,10 @@ std::string TestItem::GetTestCMD(){
     this->_Lock.UNLock();
     return cmd;
 }
-uint32_t TestItem::GetStandard(){
+
+int32_t TestItem::GetStandard(){
     this->_Lock.LockR();
-    uint32_t standard = this->_test_standard;
+    int32_t standard = this->_test_standard;
     this->_Lock.UNLock();
     return standard;
 }
@@ -143,19 +148,19 @@ std::vector<TestItem>::iterator TargetDev::GetCuritem(){
 }
 
 bool TargetDev::NextCuritem(){
-    this->_Lock.LockW();
+    this->_Lock.TryLockW();
     TestItem tmpitem = *this->_Curitem;
     if (tmpitem.GetResult() == false){
         _ErrItemList.push_back(tmpitem);
     }
     this->UpdateDB();
-    if (this->_Curitem == this->GetItemlist().end()){
+    if (++this->_Curitem == this->_ItemList.end()){// work condition
         this->_Lock.UNLock();
         return false;
     }
-    this->_Curitem++;
-    if ((*this->_Curitem).GetTestKey() == "reboot"){
-        this->_Times = (*this->_Curitem).GetStandard();
+    // this->_Curitem++;
+    if (this->_Curitem->GetTestKey() == "reboot"){
+        this->_Times = this->_Curitem->GetStandard();
         LOG(INFO) << this->GetMac() << "is going to Reboot " << this->_Times << " times";
     }
     this->_Lock.UNLock();
@@ -170,9 +175,9 @@ IDINT TargetDev::GetCuritemID(){
     return curid;
 }
 
-uint32_t TargetDev::GetTimes(){
+int32_t TargetDev::GetTimes(){
     this->_Lock.LockR();
-    uint32_t rtimes = this->_Times;
+    int32_t rtimes = this->_Times;
     this->_Lock.UNLock();
     return rtimes;
 }
@@ -213,10 +218,15 @@ void TargetDev::Reboot(){
     LOG(INFO) << "Start reboot";
     this->_Lock.TryLockW();// Lock fail!!!, try lock success, but lock fail
     LOG(INFO) << "Lock success";
-    uint32_t timesleft = this->_Times - 1;
-    LOG(INFO) << "Reboot remaining: " << timesleft;
+    int32_t timesleft = this->_Times - 1;
     this->_Times = timesleft;
     LOG(INFO) << "Reboot remaining: " << this->_Times;
+    this->_Lock.UNLock();
+}
+
+void TargetDev::finReboot(){
+    this->_Lock.TryLockW();
+    this->_Times = -1;
     this->_Lock.UNLock();
 }
 
@@ -247,6 +257,8 @@ TargetDev::TargetDev(std::string mac, std::string ipaddr)
         }
     LOG(INFO) << "Finish upload device: " << mac << " to database";
     this->_Ready = true;
+    this->_Times = -1;
+    this->_Alive = true;
 }
 
 std::vector<TestItem> TargetDev::InitItemlist(){
@@ -323,7 +335,8 @@ bool TestControl::isFresh(std::string ipaddr){
 bool TestControl::isRebooting(std::string ipaddr){
     LOG(INFO) << "Check if " << this->_DevMap[ipaddr]->GetMac() << " is Rebooting";
     bool ret = false;
-    if (this->_DevMap[ipaddr]->GetTimes() > 0){
+    int reboottimes = this->_DevMap[ipaddr]->GetTimes();
+    if (reboottimes >= 0){
         LOG(INFO) << this->_DevMap[ipaddr]->GetMac() <<" is Rebooting";
         ret = true;
     }
@@ -335,15 +348,23 @@ nlohmann::json TestControl::Start(std::string ipaddr){
     nlohmann::json json_ret;
     if (isRebooting(ipaddr)){
         try {
-            json_ret = {
-                {"Method", "Reboot"},
-                {"Content", ""}
-            };          
-            this->_DevMap[ipaddr]->Reboot();
-            return json_ret;
+            if (this->_DevMap[ipaddr]->GetTimes() == 0 &&
+                    this->_DevMap[ipaddr]->GetCuritem()->GetTestKey()=="reboot"){
+                this->_DevMap[ipaddr]->GetCuritem()->SetResult(true);
+                json_ret = this->StartNextTest(ipaddr);
+                this->_DevMap[ipaddr]->finReboot();
+                return json_ret;
+            }
+            else {
+                json_ret = {
+                    {"Method", "Reboot"},
+                    {"Content", ""}
+                };
+                this->_DevMap[ipaddr]->Reboot();
+                return json_ret;
+            }
         } catch (std::exception &e) {
-            LOG(ERROR) << "Reboot error" << e.what();
-
+            LOG(ERROR) << "Reboot error: " << e.what();
         }
     }
     else if (isFresh(ipaddr)){
@@ -356,9 +377,12 @@ nlohmann::json TestControl::Start(std::string ipaddr){
     else {// resume existing test routine
         try {
             LOG(INFO) << ipaddr <<" Try to resume test";
+
             json_ret = Resume(ipaddr);
         } catch (std::exception &e) {
-            LOG(ERROR) << "Resume test from" << ipaddr << "failed" <<e.what();
+            LOG(ERROR) << "Resume test for "
+                       << this->_DevMap[ipaddr]->GetMac()
+                       << " failed" <<e.what();
         }
     }
     return json_ret;
@@ -381,17 +405,24 @@ nlohmann::json TestControl::FreshStart(std::string ipaddr){
     return json_ret;
 }
 
-nlohmann::json TestControl::Resume(std::string ipaddr){//ERROR
+nlohmann::json TestControl::Resume(std::string ipaddr){// ERROR
     LOG(INFO) << "Resuming";
     auto list = this->_DevMap[ipaddr]->GetItemlist();
     auto itlist = this->_DevMap[ipaddr]->GetCuritem();
-    nlohmann::json idlist;
-    while (itlist != list.end()){
-        nlohmann::json json_tmp = {
-            {"test_id", (*itlist).GetTestID()},
-            {"test_prog_start", (*itlist).GetTestCMD()}
+    if (itlist == list.end()){
+        nlohmann::json json_ret = {
+            { "Method", "Stop" },
+            { "Content", ""}
         };
-        ++itlist;
+        return json_ret;
+    }
+    nlohmann::json idlist;
+    while (++itlist != list.end()){
+        nlohmann::json json_tmp = {
+            {"test_id", itlist->GetTestID()},
+            {"test_prog_start", itlist->GetTestCMD()}
+        };
+        idlist.push_back(json_tmp);
     }
     nlohmann::json json_ret = {
         { "Method", "Start" },
@@ -443,10 +474,10 @@ bool TestControl::SetItemResult(std::string ipaddr, const nlohmann::json content
             bool result = content["test_result"];
             if (id == this->_DevMap[ipaddr]->GetCuritemID()){
                 LOG(INFO) << "Result from: " << ipaddr << " content right";
-                (*this->_DevMap[ipaddr]->GetCuritem()).SetResult(result);
+                this->_DevMap[ipaddr]->GetCuritem()->SetResult(result);
                 LOG(INFO) << "Result from: " << ipaddr << " Set: "<< result;
-                this->_DevMap[ipaddr]->UpdateDB();
-                LOG(INFO) << "Upload: " << ipaddr << " result to database";
+                //this->_DevMap[ipaddr]->UpdateDB();
+                //LOG(INFO) << "Upload: " << ipaddr << " result to database";
                 ret = true;
             }
         }
@@ -455,7 +486,7 @@ bool TestControl::SetItemResult(std::string ipaddr, const nlohmann::json content
 }
 
 nlohmann::json TestControl::StartNextTest(std::string ipaddr){
-    this->_Lock.LockW();
+    this->_Lock.TryLockW();
     if (!this->_DevMap[ipaddr]->NextCuritem()){
         // reach the end of testlist, respond a finish confirmation message
         nlohmann::json tmp_json = {

@@ -43,7 +43,7 @@ public:
     IDINT GetTestID();
     std::string GetTestKey();
     std::string GetTestCMD();
-    uint32_t GetStandard();
+    int32_t GetStandard();
     bool GetRepaired();
 
 private:
@@ -53,13 +53,13 @@ private:
     std::string _test_name;
     std::string _test_key;
     std::string _test_info;
-    uint32_t _test_standard;
+    int32_t _test_standard;
     std::string _test_start_prog;// cmd to start test
     std::string _test_stop_prog;// some how useless, because we use some brutal way to do it
-    bool _test_select = true;// useless or duplicated, because if some TestItem instance has been created which means it had been selected already.
-    bool _test_result = false;// pass or not pass
-    bool _repaired = false;// variable only exists in mem not db
-    size_t _test_status = 0;// ready=0, running=1, finished=2, error=3, vairable
+    bool _test_select;// useless or duplicated, because if some TestItem instance has been created which means it had been selected already.
+    bool _test_result;// pass or not pass
+    bool _repaired;// variable only exists in mem not db
+    size_t _test_status;// ready=0, running=1, finished=2, error=3, vairable
 };
 
 class TargetDev
@@ -75,13 +75,14 @@ public:
     std::vector<TestItem>::iterator GetCuritem();
     bool NextCuritem();
     IDINT GetCuritemID();
-    std::uint32_t GetTimes();
+    std::int32_t GetTimes();
     bool GetReady();
 
     void UpdateDB_ALL();// update items already exists
     void UpdateDB();
     void UpdateDB(IDINT id);
     void Reboot();
+    void finReboot();
 
     std::vector<TestItem> GetErrlist();
 
@@ -89,10 +90,11 @@ private:
     std::vector<TestItem> InitItemlist();
 private:
     RWLock _Lock;
-    std::uint32_t _Times; // Remaining reboot times
+    std::int32_t _Times; // Remaining reboot times
     std::string _MAC;
     std::string _IP;
-    bool _Ready = false;
+    bool _Alive;
+    bool _Ready;
     std::vector<TestItem> _ItemList;
     std::vector<TestItem>::iterator _Curitem;
     std::vector<TestItem> _ErrItemList;
@@ -115,7 +117,6 @@ public:
     bool SetItemResult(std::string ipaddr, const nlohmann::json content);// process result uploaded by client
     nlohmann::json StartNextTest(std::string ipaddr);
     bool Reload(std::string ipaddr);// reload test process for specific device
-
     //For program testing
 
 private:

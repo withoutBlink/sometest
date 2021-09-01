@@ -244,12 +244,14 @@ void WSSRoute::onItemMesg(const nlohmann::json request, std::shared_ptr<WsServer
     }
 
     if(method == "TestReady"){ // decide the test machine is ready or not after recieve
-        if (TestControl::Instance()->Prepare(ipaddr, content)){SendMsg(connection, TestControl::Instance()->Start(ipaddr).dump());}
+        if (TestControl::Instance()->Prepare(ipaddr, content)){
+            SendMsg(connection, TestControl::Instance()->Start(ipaddr).dump());}
         else {this->ErrorRespond("Client not ready", connection);}
     } else if (method == "Started"){
-        if (TestControl::Instance()->SetStarted(ipaddr,content)){}
-        else {ErrorRespond("Illegal testitem or Itemlist not ready", connection);}
-    } else if (method == "RelaodTest"){
+        if (!TestControl::Instance()->SetStarted(ipaddr,content)){
+            ErrorRespond("Illegal testitem or Itemlist not ready", connection);}
+    } else if (method == "RelaodTest"){// TODO: reset result for device from ipaddr
+
     } else if (method == "TimeSync"){
         nlohmann::json tmp_json = {
             {"Method", "TimeSync"},
@@ -269,8 +271,7 @@ void WSSRoute::onItemMesg(const nlohmann::json request, std::shared_ptr<WsServer
             nlohmann::json confirm = {
                 {"Method", "Confirm"},
                 {"Content", ""}};
-            _This->SendMsg(ipaddr, confirm.dump());
-        }
+            _This->SendMsg(ipaddr, confirm.dump());}
     } else{
         WSSRoute::Instance()->SendMsg(connection, "Illegal Message");
         LOG(WARNING) << "Unrecongnized method:"

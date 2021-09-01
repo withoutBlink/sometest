@@ -46,7 +46,7 @@ bool MDBManager::ResultListChk(){
     try {
         LOG(INFO) << "Create new table for testing";
         std::unique_ptr<sql::Statement> crtmptbl(this->_Conn->createStatement());
-        crtmptbl->executeQuery("create table "+this->_ResultTable+" (mac_addr varchar(20), test_id int, test_result boolean, test_status boolean)");
+        crtmptbl->executeQuery("create table "+this->_ResultTable+" (mac_addr varchar(20), test_id int, test_result boolean, test_status boolean, repaired boolean)");
         LOG(INFO) <<"New result table created";
         return true;
     } catch (sql::SQLException &e) {
@@ -93,7 +93,7 @@ nlohmann::json MDBManager::GetAllTest()
                 {"test_name", output->getString(3)},
                 {"test_key", output->getString(4)},
                 {"test_info", output->getString(5)},
-                {"test_standard", output->getString(6)},
+                {"test_standard", output->getInt(6)},
                 {"test_start_prog", output->getString(7)},
                 {"test_stop_prog", output->getString(8)},
                 {"test_select", output->getBoolean(9)},
@@ -190,16 +190,17 @@ bool MDBManager::SetStatus(IDINT id, std::string MAC, size_t status){
 
 
 
-bool MDBManager::SetItemResult(IDINT id, std::string MAC, bool result){
+bool MDBManager::SetItemResult(IDINT id, std::string MAC, bool result, bool repair){
     try {
     std::unique_ptr<sql::PreparedStatement>
             stmnt(this->_Conn->prepareStatement(
-                      "update "+this->_ResultTable+" set test_result=? where test_id=? and mac_addr=?"
+                      "update "+this->_ResultTable+" set test_result=?, repaired=? where test_id=? and mac_addr=?"
                       )
                   );
     stmnt->setBoolean(1, result);
-    stmnt->setUInt(2, id);
-    stmnt->setString(3, MAC);
+    stmnt->setBoolean(2,repair);
+    stmnt->setUInt(3, id);
+    stmnt->setString(4, MAC);
     stmnt->executeQuery();
     return true;
     }
@@ -244,7 +245,7 @@ bool MDBManager::InsertItem(nlohmann::json newitem){
     stmnt->setString(3, newitem["test_name"].get<std::string>());
     stmnt->setString(4, newitem["test_key"].get<std::string>());
     stmnt->setString(5, newitem["test_info"].get<std::string>());
-    stmnt->setString(6, newitem["test_standard"].get<std::string>());
+    stmnt->setInt(6, newitem["test_standard"].get<int>());
     stmnt->setString(7, newitem["test_start_prog"].get<std::string>());
     stmnt->setString(8, newitem["test_stop_prog"].get<std::string>());
     stmnt->setBoolean(9, newitem["test_select"].get<bool>());
@@ -274,7 +275,7 @@ nlohmann::json MDBManager::GetTestItem(IDINT id){
         {"test_name", output->getString(3)},
         {"test_key", output->getString(4)},
         {"test_info", output->getString(5)},
-        {"test_standard", output->getString(6)},
+        {"test_standard", output->getInt(6)},
         {"test_start_prog", output->getString(7)},
         {"test_stop_prog", output->getString(8)},
         {"test_select", output->getBoolean(9)},

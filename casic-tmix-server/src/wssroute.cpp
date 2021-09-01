@@ -181,7 +181,7 @@ void WSSRoute::onMessage(std::shared_ptr<WsServer::Connection> connection,
 
     //_This->SendMsgToItem(msg); // echo test
 
-    try { // json based message frame test
+    try { // json based message frame
 		nlohmann::json request = nlohmann::json::parse(msg);
 		if (request.is_null() || !request.is_object()
 				|| !request.contains("Method") || !request["Method"].is_string()
@@ -193,7 +193,7 @@ void WSSRoute::onMessage(std::shared_ptr<WsServer::Connection> connection,
             auto funstaff = [](const nlohmann::json request, const std::shared_ptr<WsServer::Connection> connection)
             {
                 _This->onItemMesg(request, connection);
-            };// add thread!!!
+            };
             std::thread itemsthread(funstaff, request, connection);
             itemsthread.detach();
         }
@@ -203,10 +203,13 @@ void WSSRoute::onMessage(std::shared_ptr<WsServer::Connection> connection,
         else
             LOG(WARNING) << "Illegal path visited by:"
                          << connection->remote_endpoint_address();
+    } catch (nlohmann::json::exception &e){
+        LOG(ERROR) << "JSON error:" << e.what();
+        _This->ErrorRespond("Illegal message", connection);
     } catch (std::exception &e) {
         _This->ErrorRespond(e.what(), connection);
-        LOG(ERROR) << e.what();
-	}
+        LOG(ERROR) <<e.what();
+    }
 }
 
 void WSSRoute::onWebMesg(const nlohmann::json request, std::shared_ptr<WsServer::Connection> connection){
@@ -233,7 +236,7 @@ void WSSRoute::onItemMesg(const nlohmann::json request, std::shared_ptr<WsServer
     std::string content_str;
     std::string ipaddr = connection->remote_endpoint_address();
     LOG(INFO) << "Start a new thread for test device: " << ipaddr;
-
+    try {
     if (request["Content"].is_string()){
         content_str = request["Content"];
     } else if (request["Content"].is_object()){
@@ -255,18 +258,30 @@ void WSSRoute::onItemMesg(const nlohmann::json request, std::shared_ptr<WsServer
     } else if (method == "BroadCast"){
         if (request["Content"].is_string()){this->BroadCast(method, content_str);}
         else if (request["Content"].is_object()){this->BroadCast(method, content);}
-        else {this->ErrorRespond("Illegal broadcast message",connection);}
+        else {this->ErrorRespond("Illegal broadcast message", connection);}
     } else if (method == "Result"){
         if(TestControl::Instance()->SetItemResult(ipaddr, content)){
-            nlohmann::json tmp_json = TestControl::Instance()->NextTest(ipaddr);
+            nlohmann::json tmp_json = TestControl::Instance()->StartNextTest(ipaddr);
             _This->SendMsg(ipaddr,tmp_json.dump());}
         else {this->ErrorRespond("illegal result content", connection);}
-    } else if (method == "StartNext"){
-
+    } else if (method == "NextStarted"){
+        if(TestControl::Instance()->SetStarted(ipaddr, content)){
+            nlohmann::json confirm = {
+                {"Method", "Confirm"},
+                {"Content", ""}};
+            _This->SendMsg(ipaddr, confirm.dump());
+        }
     } else{
         WSSRoute::Instance()->SendMsg(connection, "Illegal Message");
         LOG(WARNING) << "Unrecongnized method:"
                      << method;
+    }
+    } catch(nlohmann::json::exception &e){
+        LOG(ERROR) << "JSON error: " << e.what();
+        ErrorRespond("Illegal message", connection);
+    } catch(std::exception &e){
+        LOG(ERROR) << e.what();
+        ErrorRespond(e.what(), connection);
     }
 }// end of onItemMesg
 

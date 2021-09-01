@@ -16,7 +16,7 @@ class Config
 public:
 	static Config *Instance();
 	static void Destory();
-    int GetServicePort();
+    ushort GetServicePort();
 
 
 private:
@@ -31,7 +31,7 @@ private:
     int PortScanServer;
     int PortServerHTTP;
     int PortServerWS;
-    int PortService;
+    ushort PortService;
     bool ErrIntereupt;
     int ErrRepetitionCount;
 

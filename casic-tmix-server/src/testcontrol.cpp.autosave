@@ -381,7 +381,7 @@ nlohmann::json TestControl::FreshStart(std::string ipaddr){
     return json_ret;
 }
 
-nlohmann::json TestControl::Resume(std::string ipaddr){//ERROR
+nlohmann::json TestControl::Resume(std::string ipaddr){// ERROR
     LOG(INFO) << "Resuming";
     auto list = this->_DevMap[ipaddr]->GetItemlist();
     auto itlist = this->_DevMap[ipaddr]->GetCuritem();

@@ -10,7 +10,7 @@ Config *Config::Instance()
 	return _This;
 }
 
-int Config::GetServicePort(){
+ushort Config::GetServicePort(){
     return this->PortService;
 }
 
